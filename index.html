@@ -1,0 +1,2306 @@
+<html>
+<head>
+    <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+    <div class="hline"></div>
+    <div class="heading"><b>Chapter 1. Overview of the installation environment</b></div><br>
+        <div class="margin">
+            The Z NetView Enterprise Management Agent (NetView agent) provides information that you can use to
+manage your network from the Tivoli Enterprise Portal using sampled and real-time data. The data
+provides information about network resources and outages, using situations and expert advice, as well as
+trends in your network through the use of historical data. You can issue NetView, VTAM, and z/OS
+commands directly from the Tivoli Enterprise Portal to provide instant display and troubleshooting
+capabilities. The NetView agent enables you to manage both availability and performance data from the
+Tivoli Enterprise Portal using cross-product links to selected z/OS OMEGAMON XE agents.<br><br>
+This book describes the installation and configuration tasks required to install the NetView agent:
+        </div>
+        <ul>
+  <li>Defining the runtime environment</li>
+  <li>Configuring the Tivoli Enterprise Monitoring Server (monitoring server)</li>
+  <li>Configuring the NetView agent</li>
+  <li>Updating NetView initialization statements</li>
+  <li>Installing and configuring the distributed components (Tivoli Enterprise Portal and Tivoli Enterprise Portal Server)</li>
+  <li>Verifying the configuration</li>
+  <li>Implementing security</li>
+  <li>Configuring historical data collection</li>
+</ul>
+<div class="margin">
+        If this is the first time you are configuring the NetView agent, review the progression of tasks defined in
+the <em>IBM Tivoli OMEGAMON XE Monitoring Agents on z/OS: Quick Start Guide</em>.<br><br>
+If you are upgrading from a previous version of the NetView agent, refer to the <em>IBM Tivoli OMEGAMON XE
+and Tivoli Management Services on z/OS: Upgrade Guide and IBM Z NetView Installation: Migration Guide</em>.
+For a list of the changes to the NetView agent for this release, see <u>Appendix C, “Enterprise Management
+Agent Changes,” on page 73.</u>
+        </div><br><br>
+        <div class="heading2">Configuration Scenarios</div>
+    <div class="hline2"></div>
+        <div class="margin">
+        The Tivoli Management Services environment requires that installation and configuration be performed on
+both the managed systems (z/OS) and on the systems where some of the Tivoli Management Services
+components run. The installation steps for these components can be performed simultaneously, but
+some of the configuration steps require that specific components already be installed.<br><br>
+<u>Figure 1 on page 2</u> shows a sample Tivoli Management Services environment.<br>
+<div class="img1">
+                        <img src="fig1.png">
+
+            </div>
+            <em>Figure 1. Sample Tivoli Management Services environment</em></div><br><br>
+            As you work through this installation guide, complete one of the following installation scenarios:
+            <ul>
+            <li><u>“Scenario 1: Creating a new runtime environment” on page 80</u><br>
+    This scenario configures a hub monitoring server and the NetView agent running in the same z/OS system image. This scenario uses a full runtime environment.
+           </li>
+            <li><u>“Scenario 2: Updating the NetView agent in an existing RTE” on page 87</u>
+    This scenario configures the NetView agent in an existing Tivoli Management Services environment. This scenario uses a full runtime environment.
+            </li>
+            </ul>
+<div class="margin">            For the installation scenarios in this book, make the following decisions:
+</div>
+            <ul>
+            <li>
+    If you are creating a new environment, decide on which z/OS image to deploy the hub monitoring server.<br>
+  The scenarios are based on using a hub monitoring server running in a z/OS environment. Note that the hub monitoring server can run on any operating system supported by IBM Tivoli Monitoring 6.3. The steps for a non-z/OS environment are similar.
+            </li>
+            <li>
+    Decide where to deploy the Tivoli Enterprise Portal Server (portal server).
+            </li>
+            <li>
+    Decide which NetView domains you plan to manage using the NetView agent. An instance of the NetView agent is required on each z/OS image containing a NetView domain that you want to manage.
+            </li>
+            </ul>
+            <div class="margin">
+            <img src="img1.png">
+
+        </div><br><br><br>
+        <div class="heading2">Installing the z/OS-based components using SMP/E</div>
+    <div class="hline2"></div><br>
+        <div class="margin">
+        The System Modification Program Extended (SMP/E) tool is used to install and maintain software on z/OS
+systems. For information on the supported levels of the SMP/E tool and other related installation
+requirements, refer to the <em>Program Directory for IBM Z NetView Enterprise Management Agent</em>.<br><br>
+            The Z NetView Enterprise Management Agent is a separate feature that has its own function modification
+identifier (FMID). If you do not have IBM Tivoli Monitoring installed or want to set up a new environment,
+see the <em>Program Directory for IBM Tivoli Management Services on z/OS</em> for the SMP/E installation
+information. After installing Tivoli Monitoring Services, see <em>IBM Tivoli OMEGAMON XE and Tivoli
+Management Services on z/OS Common Planning and Configuration Guide</em>.<br><br>
+Before starting the configuration procedures described in this book, perform the SMP/E installation of the
+NetView product and optionally, Tivoli Management Services if not already installed. Also perform the
+post-installation steps described in the NetView program directory, the Z NetView Enterprise
+Management Agent program directory, and <em>IBM Z NetView Installation: Getting Started</em>.
+        </div><br><br>
+        <div class="heading2">Abbreviations used</div>
+    <div class="hline2"></div><br>
+        <div class="margin">
+        <u>Table 1 on page 3</u> includes abbreviations and their meaning.<br>
+            
+            <table border="1px">
+        <tr>
+            <td colspan="2"><em>Table 1. Abbreviations</em></td>
+        </tr>
+                <tr>
+                    <td><b>Abbreviation</b></td>
+                    <td><b>Meaning</b></td>
+                </tr>
+                <tr>
+                <td>&hilev</td>
+                    <td>High-level qualifier</td>
+                </tr>
+                <tr>
+                <td>&midlev</td>
+                <td>The mid-level qualifier. Defaults to the runtime environment name. Used<br>
+in conjunction with the &rhilev and &rvhilev qualifiers.</td>
+                </tr>
+                <tr>
+                <td>&rhilev</td>
+                <td>Runtime environment (RTE) high-level qualifier (non-VSAM)</td>
+                </tr>
+                <tr>
+                <td>&rte</td>
+                <td>Name for the runtime environment that you are defining</td>
+                </tr>
+                <tr>
+                <td>&rvhilev</td>
+                <td>Runtime high-level qualifier (VSAM)</td>
+                </tr>
+                <tr>
+                <td>&shilev</td>
+                <td>High-level qualifier for the libraries (INST* libraries)</td>
+                </tr>
+                <tr>
+                <td>&thilev</td>
+                <td>SMP/E maintained product target high-level qualifier</td>
+                </tr>
+            </table>
+        </div><br><br>
+        <div class="heading2">PARMGEN configuration method</div>
+    <div class="hline2"></div><br>
+        <div class="margin">
+        With the PARMGEN configuration method, you edit a comprehensive list of parameters that configure
+Tivoli Management Services on z/OS components and the NetView agent. You then submit a series of jobs
+to create a complete runtime environment using the parameter values that you specified. For more
+information about the PARMGEN configuration method, see the <em>OMEGAMON XE and Tivoli Management
+Services on z/OS Common Planning and Configuration Guide</em>. The parameter values specific to the
+NetView agent are described in <u>Appendix D, “NetView PARMGEN installation parameters,” on page 75</u>.
+        </div><br><br>
+        <div class="heading2">Runtime environment (RTE)</div>
+    <div class="hline2"></div><br>
+        <div class="margin">
+        A runtime environment (RTE) is a logical grouping of runtime libraries that are referenced by started tasks
+that are running on a z/OS image. The PARMGEN tool is used to create and manage a runtime
+environment. This runtime environment determines the number and types of runtime libraries that are
+required. You must define a runtime environment on each z/OS image that is monitored by the NetView
+            agent.</div><br>
+        <div class="subheading"><b>Types of libraries created</b>
+        </div>
+        <div class="margin">
+        <u>Table 2 on page 4</u> summarizes the types of libraries that are created during installation and
+configuration of the NetView agent.</div>
+        <br>
+        <table border="1px">
+        <tr>
+            <td colspan="2"><em>Table 2. Types of libraries</em></td>
+        </tr>
+                <tr>
+                    <td><b>Type of Library</b></td>
+                    <td><b>Description</b></td>
+                </tr>
+            <tr>
+            <td>Runtime libraries</td>
+            <td>General term for libraries referenced by started task procedures.
+Includes SMP/E maintained product target, base, and z/OS image-specific libraries</td>
+            </tr>
+        <tr>
+            <td>SMP/E maintained product target
+libraries<br>
+Abbreviated <em>thilev</em>.<br><br></td>
+            <td>SMP/E maintained product target libraries</td>
+            </tr>
+        <tr>
+            <td>Base libraries<br>
+Abbreviated <em>&rhilev</em> or <em>&rhilev.&rte</em>.</td>
+            <td>Read-only runtime libraries that the configuration process does not
+alter and that can be shared between systems. These libraries
+physically exist in a Full or Base runtime environment, or as SMP/E
+maintained product target libraries (if a runtime environment shares
+with SMP/E).<br>
+The base libraries can contain the actual data sets maintained by
+SMP/E, or a copy of them. Use a clone or copy of the SMP/E
+installation libraries for a production environment.</td>
+            </tr>
+        <tr>
+            <td>z/OS image-specific libraries<br>
+Abbreviated <em>&rhilev.&rte.</em><br><br></td>
+            <td>Runtime libraries that are built during configuration to run on a
+specific z/OS image. These libraries contain the unique elements
+required for a particular z/OS image and cannot be shared among
+z/OS images. They can be updated.</td>
+            </tr>
+         </table><br>
+        <div class="margin">
+        You can optimize your product environment based on the library types. For example, by allocating
+common base libraries to a single runtime environment that can be shared by other runtime
+environments, you can substantially reduce the amount of disk space required, as well as simplify the
+maintenance across remote z/OS images.
+        </div><br>
+        <div class="subheading"><b>Types of runtime environments</b>
+        </div><br>
+        <div class="margin">
+        <u>Table 3 on page 4</u> explains the types of runtime environments that you can create during product
+configuration. For more information about runtime environments, see the <em>OMEGAMON XE and Tivoli
+            Management Services on z/OS Common Planning and Configuration Guide</em>.</div><br>
+        <table border="1px">
+        <tr>
+            <td colspan="2"><em>Table 3. Types of runtime environments</em></td>
+        </tr>
+                <tr>
+                    <td><b>Type of runtime environment</b></td>
+                    <td><b>Description</b></td>
+                </tr>
+        <tr>
+            <td>Full (self-contained) runtime<br>
+environment</td>
+            <td>Runtime environment containing a full set of dedicated libraries,
+consisting of both z/OS image-specific libraries and a copy of the
+SMP/E installation read-only base libraries eligible for sharing with
+other runtime environments.<br>
+See <u>Appendix E, “Configuring the NetView agent by using the
+PARMGEN standard configuration method,” on page 79</u> for an
+example.</td>
+            </tr>
+        <tr>
+            <td>Base runtime environment</td>
+            <td>Runtime environment containing read-only libraries that are
+independent of configuration. These libraries must be shared by
+another runtime environment containing configuration information.</td>
+            </tr>
+        <tr>
+            <td>Sharing-with-base runtime environment</td>
+            <td>Runtime environment containing z/OS image-specific libraries and
+referencing the base libraries configured in a base runtime
+environment.</td>
+            </tr>
+            <tr>
+            <td>Sharing-with-full runtime environment</td>
+            <td>Runtime environment containing z/OS image-specific libraries and
+referencing the base libraries configured in a full runtime
+environment</td>
+            </tr>
+            <tr>
+            <td>Sharing-with-SMP/E runtime
+environment</td>
+           <td>Runtime environment containing z/OS image-specific libraries and
+referencing the libraries managed by SMP/E</td> 
+            </tr>
+            </table>
+        <br><br><br>
+          <div class="hline"></div>
+    <div class="heading"><b>Chapter 2. Configuring the NetView agent by using
+the PARMGEN quick configuration method</b></div><br><br>
+        <div class="margin">  
+            The scenarios in this section use a full runtime environment named <b>CNM01</b>. This environment contains all
+the libraries that are required by the NetView agent. All base libraries and LPAR-specific libraries are
+allocated within the <b>CNM01</b> runtime environment. The monitoring server can be on this image, or it can
+exist on another system.
+            <div class="back"><br>
+            RTE Name: CNM01<br>
+Type: FULL<br>
+Hilev: NETVIEW.V621RTE<br>
+Midlev: CNM01<br>
+Shares with: (none)<br><br>
+            </div>
+            This type of runtime environment is illustrated in <u>Figure 2 on page 7.</u>
+            <div class="img2">
+                        <img src="img2.png">
+
+            </div>
+          <em>Figure 2. Full runtime environment on a single system</em><br><br>     
+<u>Figure 3 on page 8</u> shows the way that a full runtime environment can be expanded to more than one
+z/OS image. Each runtime environment is self-contained; the three runtime environments CNM01,
+CNM02, and CNM03 on systems NetView1, NetView2, and NetView3 do not share any libraries. The
+monitoring server can be on one of these images or it can run on an external system.
+            <div class="img3">
+            <img src="img3.png">
+            </div>
+            <em>Figure 3. Full runtime environments on several systems</em><br>
+            <img src="img4.png">
+           The following scenarios contain procedures that you can follow to configure the NetView agent by using
+            the PARMGEN quick configuration method.</div>
+            <ul>
+            <li><u>“Scenario 1: Creating a new runtime environment” on page 8</u></li>
+            <li><u>“Scenario 2: Converting an existing Configuration Tool RTE to PARMGEN and Updating it” on page 17</u></li>
+            </ul><br><br>
+        <br><br>
+         <div class="heading2">Scenario 1: Creating a new runtime environment</div>
+    <div class="hline2"></div><br><br>
+        <div class="margin">   
+        <b>About this task</b><br><br>
+            If you don't have any existing full runtime environment (RTE), you can use the PARMGEN Configuration
+tool to create a new runtime environment. Follow these steps to create a new RTE and configure the
+NetView agent.<br><br>
+            <b>Procedure</b>
+        </div>
+            <ol>
+             <li>Start the PARMGEN tool.</li>
+             <li>Use the <b>KCIJPCFG</b> job to set up PARMGEN work environment for an RTE.</li>
+             <li>Customize PARMGEN configuration profiles.</li>
+             <li>Create the RTE members and jobs.</li>
+             <li>Submit batch jobs to complete the PARMGEN setup.</li>
+            </ol>
+        <br>
+            <div class="subheading">Starting the PARMGEN tool</div><br>
+            <div class="margin">
+        <b>About this task</b><br><br>
+                Follow these steps to start the PARMGEN tool:
+        </div>
+                <ol>
+  <li>Log on to a TSO session.</li>
+  <li>Enter ISPF.</li>
+  <li>From the Primary Option Menu, enter Option 6 (Command).</li>
+  <li>If you are using a 3270 Model 2 (24 x 80) display, turn off the predefined function (PF) keys so that the function keys are not truncated. To do this, enter PFSHOW on the command line and repeat this command until the ISPF default function keys are no longer displayed.</li>
+  <li>From the command line, enter the following command:</li>
+            <div class="back"><br>
+                EX ’&shilev.TKANCUS’<br>
+                </div><br>
+                where &shilev is the high-level qualifier that you specified when you installed Tivoli Management
+Services.<br>
+A panel similar to the following one is displayed:
+       <div class="back"><br>
+                    KCIPQPGW<br>
+          <center>
+            Welcome to the z/OS Installation and Configuration Tools for<br>
+           z Systems Management Suites</center><br><br>
+           <ol>
+  <li>
+    Checklist: System preparation checklists
+    <p>Tip: Read/Print Checklists prior to installation and configuration.</p>
+  </li>
+  <li>
+    Installation Workflow:
+    <p>SMP/E-install z/OS products with Install Job Generator (JOBGEN)</p>
+    <p>Conditional: JOBGEN is not required when using SystemPac or ServerPac.</p>
+  </li>
+  <li>
+    Configuration Workflow (Post-installation):
+    <p>Configure z/OS products with Parameter Generator Workflow (PARMGEN)</p>
+  </li>
+</ol>
+<ol type="I">
+           <li>               What's New in PARMGEN? <=== Revised<br><br><br>
+                Maintenance Level: HKCI310 PTF UA91952 (APAR OA51755 2Q17 Interim Feature)
+               <center>©Copyright IBM Corporation 1992-2019 <br>
+ Licensed Material - Program Property of</center><br>
+               IBM<br><br>
+                Option ===> <br>
+               <table>
+               <tr>
+                   <td>F1=HELP</td>
+                   <td>F2=SPLIT</td>
+                   <td>F3=END</td>
+                   <td>F4=RETURN</td>
+                   <td>F5=RFIND</td>
+                   <td>F6=RCHANGE</td>
+                   </tr>
+                   <tr>
+                   <td>F7=UP</td>
+                   <td>F8=DOWN</td>
+                   <td>F9=SWAP</td>
+                   <td>F10=LEFT</td>
+                   <td>F11=RIGHT</td>
+                       <td>F12=RETRIEVE</td>
+                       
+                       
+                   </tr>
+               </table>
+      
+      <br>
+</li>
+           </ol>
+              </div> <br>
+           <li>Review the checklists by selecting <b>Option 1</b>.</li>
+  <li>You can skip <b>Option 2</b> if you have already completed this step when you installed Tivoli Management Services.</li>
+  <li>For the Quick configuration, from the z/OS Installation and Configuration Tools panel, select <b>Option 3</b> to display the <b>Parameter Generator (PARMGEN) Workflow</b> panel. A panel similar to the following is displayed.</li><br>        
+                    <div class="back"><br>
+                    KCIPQPGA -------- PARAMETER GENERATOR (PARMGEN) WORKFLOW MENU -----------------
+ Command ===><br>
+                        <center>Quick Configuration Mode</center><br><br>
+                         Enter parameter values appropriate for the LPAR runtime environment (RTE).<br><br>
+                        <table border="0px">
+                        <tr>
+                            <td> GBL_USER_JCL:<br><br><br><br><br><br></td>
+                            <td>NETVIEW.V621RTE.JCL________________________ <br>
+ (for example, TDSF72.ITM63.DS630.SYSPLEX.PARMGEN.JCL) <br>
+ Specify the dataset name of the PARMGEN common/global <br>
+ library for the different LPAR runtime environments (RTEs).<br> 
+ Use the same dataset for managing the different LPAR RTEs. <br>
+ Multiple users can specify the same dataset to manage RTEs.</td>
+                            </tr>
+                            <tr>
+                            <td> RTE_PLIB_HILEV:<br><br><br><br><br><br></td>
+                            <td>NETVIEW.V621RTE_______________ <br>
+ Specify the High-Level Qualifier (&hlq) portion of the <br>
+ PARMGEN interim staging and work libraries for this LPAR RTE: <br>
+ - &hlq.&rte_name.IK* (IKANCMDU,IKANPARU,IKANSAMU) <br>
+ - &hlq.&rte_name.WK* (WKANCMDU,WKANPARU,WKANSAMU) <br>
+ - &hlq.&rte_name.WCONFIG</td>
+                            </tr>
+                            <tr>
+                            <td>RTE_NAME:<br><br></td>
+                            <td>CNM01_ (Type ? for a list of configured RTEs) <br>
+ Specify the runtime environment (&rte_name) for this LPAR.</td>
+                            </tr>
+                        </table><br>
+                        Press F1=Help for more information. Type U or UTIL to access utility menu.<br><br>
+                        <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+                    </div><br>
+                    <b>Note:</b> PARMGEN has two types of installation modes: Quick configuration and Standard configuration.
+This scenario documents the Quick configuration, which is the recommended method. For more
+information about the Standard configuration method, see <em>Appendix Configuring the NetView agent by
+using the PARMGEN standard configuration method</em> and the OMEGAMON shared publications.
+                    <li>Enter the following parameter values for your environment:</li>
+                    <b>GBL_USER_JCL</b><br>
+                    The name of a JCL library to be created for PARMGEN jobs, for example, NETVIEW.V621RTE.JCL.
+                    <b>RTE_PLIB_HILEV</b>
+                    The high-level qualifier for PARMGEN work libraries, for example, NETVIEW.V621RTE.
+                    <b>RTE_NAME</b>
+                    The name of the runtime environment to be created, for example, CNM01.<br>
+                    Press Enter after you fill in the parameter values. If the GBL_USER_JCL library that you specified on
+the <b>Parameter Generator (PARMGEN) Workflow</b> panel does not exist, a message is displayed. Press
+Enter to allocate the JCL library and proceed to the main options panel for PARMGEN:
+                    <div class="back">
+                    KCIPQPGB PARAMETER GENERATOR (PARMGEN) WORKFLOW - PRIMARY OPTION MENU --------<br>
+ Option ===><br>
+                        <center>Quick Configuration Mode</center>
+                 GBL_USER_JCL: NETVIEW.V621RTE.JCL<br> 
+ RTE_PLIB_HILEV: NETVIEW.V621RTE <br>
+ RTE_NAME: CNM01<br>
+                        <table>
+                        <tr>
+                            <td>Notes:<br><br><br><br></td>
+                            <td> Perform steps 1 through 5 in sequence, repeating steps as necessary. <br>
+ If reconfiguring this RTE, see Maintenance Scenarios F1=Help topic. <br>
+ Enter n (1-5) to perform tasks. <br>
+ Enter ns (1s-5s) for detailed job/task status.</td>
+                            </tr>
+                        </table>
+                        <table border="0px">
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>Description</td>
+                            <td>Job/Label</td>
+                            <td>Status</td>
+                            <td>Date</td>
+                            
+                            </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>--------------------------------------------</td>
+                            <td>---------</td>
+                            <td>---------</td>
+                            <td>----------</td>
+                            </tr>
+                            <tr>
+                            <td>1.</td>
+                            <td>Set up/Refresh PARMGEN work environment.</td>
+                                <td>KCIJPCFG</td>
+                                <td>RC= 00000</td>
+                                <td>2017/02/22</td>
+                            </tr>
+                            <tr>
+                            <td>2.</td>
+                            <td>Customize PARMGEN configuration profiles.</td>
+                            <td>CNM01</td>
+                                <td>Edited</td>
+                                <td>2015/02/27</td>
+                            </tr>
+                            <tr>
+                            <td>3.</td>
+                            <td>Create this RTE's runtime members and jobs.</td>
+                            <td>$PARSE</td>
+                            <td>Enter 3</td>
+                            <td>for details.</td>
+                            </tr>
+                            <tr>
+                            <td>4.</td>
+                            <td>Submit batch jobs to complete PARMGEN setup.</td>
+                            <td>SUBMIT</td>
+                            <td>Enter 4</td>
+                            <td>for details.</td>
+                            </tr>
+                            <tr>
+                            <td>5.</td>
+                            <td>Perform post configuration steps.</td>
+                            <td>POSTCFG</td>
+                            </tr>
+                            <tr>
+                            <td>R</td>
+                            <td>Create next RTE - Reset fields.</td>
+                            <td>New RTE</td>
+                            </tr>
+                        </table><br>
+                         Press F1=Help for more information. Type U or UTIL to access utility <br>
+menu. <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+                        </div>
+                    
+</ol>
+        </div><br>
+        
+        <div class="subheading">
+        Option 1. KCIJPCFG Setting up PARMGEN work environment for an RTE
+        </div>
+           <br><br> 
+    <div class="margin">
+            <b>About this task</b><br>
+            To use the KCIJPCFG job to set up PARMGEN work environment for an RTE, complete the following
+steps:<br><br>
+        <b>Procedure</b></div>
+            <ol>
+        <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select Option 1 to display the <b>Set Up</b>
+<b>PARMGEN Work Environment</b> panel (1 of 3).</li>
+                <div class="back">
+                KCIPQPG1 SET UP/REFRESH PARMGEN WORK ENVIRONMENT FOR AN RTE (1 OF 3) ---------
+                <center>Quick Configuration Mode</center>
+                 Specify the RTE model profile to use: <br>
+ ==> ?__________________________<br>
+                    
+                    - To create a new RTE based on a predefined IBM model, type a ? in <br>
+ the field and press Enter, then select the appropriate template. <br>
+ - To create a new RTE that is a clone of an existing PARMGEN RTE, <br>
+ specify the WCONFIG profile library and RTE member name to clone; <br>
+ for example: (&hlq.&rte.WCONFIG(&clone_from)) <br>
+ - To create a new RTE that is a clone of an ICAT-created RTE, <br>
+ specify the ICAT RTE Batch member location and RTE member; <br>
+ for example: (&hlq.ICAT.INSTJOBS(CNM01)) <br>
+ - To create a new RTE from scratch, leave this field blank. <br>
+ - To reconfigure or upgrade this existing PARMGEN RTE, specify its values; <br>
+ for example: (NETVIEW.V621RTE.CNM01.WCONFIG(CNM01))<br>
+                 Customize jobcard data: <br>
+ ==> //USER1A JOB NOTIFY=&SYSUID,____________________________________________<br> 
+ ==> // CLASS=A,MSGCLASS=A,MSGLEVEL=(1,1)__________________________ <br>
+ ==> //*______________________________________________________________________ <br>
+ ==> //*______________________________________________________________________<br>
+                    
+                     Specify the Install Job Generator (JOBGEN) output library if you want 
+ PARMGEN to reuse CALLLIBS parameters from the JOBGEN repository:
+                    ==> ____________________________________________ <br>
+ (Type ? for last referenced JOBGEN library discovered, if any.) <br>
+ 
+ Press F1=Help for more information. Type U or UTIL to access utility <br>
+menu. <br>
+ 
+ Command ===>
+                    <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+                    
+                </div>
+                <li> Enter a ? in the first input field, and update the job statement to be used for PARMGEN jobs, because
+the scenario creates a new runtime environment.</li>
+                For example, use the following code:
+                <div class="back">
+                //USER1A JOB MSGLEVEL=1,MSGCLASS=A,NOTIFY=USER1
+                </div>
+                <ol type="a">
+                 <li>Press Enter to go to the resulting panel.</li>
+                    <li>On the resulting panel, select @MDLHF Full RTE w/ Static Hub TEMS/Agents as the
+template to use, and press Enter to return to panel 1 of 3:</li>
+                    <div class="back">
+                     KCIPQMDL ----------------- SELECT RTE MODEL FROM LIST ------ Row 1 to 22 of 22 <br>
+ Command ===> <span class="right">Scroll ===> PAGE</span><br><br>
+                        Following is a list of predefined LPAR RTE model profiles available in <br>
+ NETVIEW.V6R3M0.TKANSAM SMP/E target library.<br><br>
+                    Select ("S" or "/") an IBM RTE model to use to create the new CNM01 RTE.
+                    
+                    Legend: <br>
+ - $MDL* models: Recommended best-practice models for new RTE deployments.<br> 
+ - @MDL* models: Additional RTE models for new RTE deployments. <br>
+ Note: For existing RTEs that want to use $MDLVARS model, use KCIJPMCF job <br>
+ from the Utilities menu.<br><br>
+                        
+                        <table>
+  <tr>
+    <td>Model</td>
+    <td>Description</td>
+    <td>Scenario</td>
+  </tr>
+<tr>
+    <td>--------</td>
+    <td>------------------------------------------------</td>
+    <td>--------</td>
+</tr>
+                            
+  <tr>
+    <td>_ $MDLHA</td>
+    <td>Full RTE w/ High Availability Hub TEMS</td>
+    <td>QCF01</td>
+  </tr>
+  <tr>
+    <td>_$MDLHFV</td>
+    <td>Full RTE w/ Static Hub TEMS/Agents w/ variables</td>
+    <td>QCF02</td>
+  </tr>
+  <tr>
+    <td> s$MDLRSBV</td>
+    <td>Sharing-w/-Base RTE w/ Remote/Agents w/ vars.</td>
+    <td>QCF03</td>
+  </tr>
+  <tr>
+    <td>_@MDLHF</td>
+    <td>Full RTE w/ Static Hub TEMS/Agents</td>
+    <td>QCF04</td>
+  </tr>
+  <tr>
+    <td>_@MDLRF</td>
+    <td>Full RTE w/ Remote TEMS/Agents</td>
+    <td>QCF05</td>
+  </tr>
+  <tr>
+    <td>_@MDLRFV</td>
+    <td>Full RTE w/ Remote TEMS/Agents w/ variables</td>
+    <td>QCF06</td>
+  </tr>
+  <tr>
+    <td>_@MDLRSB</td>
+    <td>Sharing-w/-Base RTE w/ Remote TEMS/Agents</td>
+    <td>QCF07</td>
+  </tr>
+  <tr>
+    <td>_@MDLRSS</td>
+    <td>Sharing-w/-SMP RTE w/ Remote TEMS/Agents</td>
+    <td>QCF08</td>
+  </tr>
+  <tr>
+    <td>_@MDLRSSV</td>
+    <td>Sharing-w/-SMP RTE w/ Remote/Agents w/ vars.</td>
+    <td>QCF09</td>
+  </tr>
+  <tr>
+    <td>_@MDLHSS</td>
+    <td>Sharing-w/-SMP RTE w/ Static Hub TEMS/Agents</td>
+    <td>QCF10</td>
+  </tr>
+  <tr>
+    <td>_@MDLHSB</td>
+    <td>Sharing-w/-Base RTE w/ Hub TEMS/Agents</td>
+    <td>QCF12</td>
+  </tr>
+  <tr>
+    <td>_$MDLAFV</td>
+    <td>Full RTE w/ Agents only-no local TEMS w/ vars.</td>
+    <td>QCF13</td>
+  </tr>
+  <tr>
+    <td>_@MDLAF</td>
+    <td>Full RTE w/ Agents only-no local TEMS</td>
+    <td>QCF14</td>
+  </tr>
+  <tr>
+    <td>_$MDLASBV</td>
+    <td>Sharing-w/-Base RTE Agents-no local TEMS w/vars.</td>
+    <td>QCF15</td>
+  </tr>
+  <tr>
+    <td>_@MDLASB</td>
+    <td>Sharing-w/-Base RTE w/ Agents only-no local TEMS</td>
+    <td>QCF16</td>
+  </tr>
+  <tr>
+    <td>_@MDLASSV</td>
+    <td>Sharing-w/-SMP RTE Agents only-no local TEMS var</td>
+    <td>QCF17</td>
+  </tr>
+  <tr>
+    <td>_@MDLASS</td>
+    <td>Sharing-w/-SMP RTE w/ Agents only-no local TEMS</td>
+    <td>QCF18</td>
+  </tr>
+  <tr>
+    <td>_$MDLHSSV</td>
+    <td>Sharing-w/-SMP RTE w/ Hub/TOM/KJJ Agent w/ vars.</td>
+    <td>QCF19</td>
+  </tr>
+  <tr>
+    <td>_$MDLHSS</td>
+    <td>Sharing-w/-SMP RTE w/ Hub/TOM/KJJ Agent only</td>
+    <td>QCF20</td>
+  </tr>
+  <tr>
+    <td>_$MDLHSBV</td>
+    <td>Sharing-w/-Base RTE w/ Hub TEMS/Agents w/ vars.</td>
+    <td>QCF21</td>
+  </tr>
+  <tr>
+    <td>_@MDLHSSV</td>
+    <td>Sharing-w/-SMP RTE w/ Hub TEMS/Agents w/ vars.</td>
+    <td>QCF22</td>
+  </tr>
+  <tr>
+    <td>_$MDLVARS</td>
+    <td>Best-practice variables for RTE parameters</td>
+    <td>QHOWTO_05</td>
+  </tr>
+</table>
+ End of <br>
+data<br><br>
+                        <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+                    
+                    </div>
+                    <li>Press Enter to go to panel 2 of 3 for setting up the work environment:</li>
+                    <br>
+                    <img src="img5.png">
+                     </ol>
+                <li> From the <b>Set Up PARMGEN Work Environment</b> panel (2 of 3), specify a value for the following fields,
+and press <b>Enter:</b></li>
+                <b>GBL_TARGET_HILEV</b><br>
+The high-level qualifier for your SMP/E target libraries, for example, NETVIEW.V6R3M0.<br>
+<b>GBL_SYSDA_UNIT</b><br>
+The disk unit name for non-VSAM data sets, for example, SYSDA.<br>
+<b>GBL_REGION</b><br>
+Region size that the generated jobs will use.<br>
+             <li>From the <b>Set Up PARMGEN Work Environment</b> panel (3 of 3), enter any values that are required by your installation for creating new data sets. Press <b>Enter</b>.</li>
+  <li>The <b>Display PARMGEN Environment Analysis</b> panel lists the components that are installed in your TKANCUS data set. Press <b>Enter</b> to display the Include Products in the <b>PARMGEN Customization</b> panel.</li>
+  <li>To include any products in the <b>PARMGEN customization</b> panel, enter / or S to the left of the product code. <br>By default, all products are preselected for customization. When you finish, specify Y in the confirm field, and press <b>Enter</b>.</li>
+  <li>Review and submit the <b>KCIJPCFG</b> job. Verify that the job ends with a <b>0</b> return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+  <li>Press <b>F3</b> to display messages for the submitted job.</li>
+  <li>Press <b>Enter</b> to return to the <b>Parameter Generator (PARMGEN) Workflow</b> panel.<br> Note the status and date on the right of the step that you just completed.</li>   
+                 </ol>
+        <div class="subheading">
+        Option 2. Customizing PARMGEN configuration profiles
+        </div>
+       <div class="margin">
+           <b>About this task</b><br>
+        To edit PARMGEN configuration profiles, complete the following steps:<br>
+           <b>Procedure</b></div>
+        <ol>
+            <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select <b>Option 2</b> to customize configuration profiles. Use this option to override or specify values for the NetView agent configuration files.
+                <p>Most of the IBM Tivoli Monitoring and NetView agent parameters are set in the <b>RTE LPAR</b> profile. Use the global parameters selection to specify the location of key libraries on your system.</p>
+        <p>Use a TSO editor to customize the files. Some optional values are commented out. If you modify any of these values, ensure that you also uncomment the statements.</p>
+    </li>
+            <li>Select <b>Option 1</b> to customize the RTE LPAR profile.</li>
+            <li>The <b>CONFIGURE_PRODUCTS</b> section shows the products that are included or excluded. Review the default settings and update them as necessary for your installation. Parameters beginning with KDS are for the monitoring server. The NetView agent uses parameters beginning with KNA.
+        <p>Ensure that you review and update the following parameters:</p>
+        
+                <b>Type of monitoring server (hub):</b><br> This parameter is controlled by the <b>KDS_TEMS_TYPE</b> parameter. This parameter is set to HUB. For the NetView agent to connect to the monitoring server, ensure that the <b>KNA_TEMS_LOCAL_CONNECT_FLAG</b> parameter is set to <b>Y</b> and that the <b>KNA_TEMS_TCP_HOST</b> parameter is correct.<br><br>
+                <b>Communications-related information, for example TCP addresses:</b><br>
+                Use a fully-qualified host name or TCPIP address. The addresses are assigned default values. Verify that the following monitoring server parameters are correct:
+                <ul>
+                    <li>RTE_TCP_HOST</li>
+                    <li>RTE_TCP_PORT_NUM</li>
+                    <li>RTE_TCP_STC</li>
+                </ul>
+                Verify that the following NetView agent parameters are correct:
+                <ul>
+                    <li>KNA_AGT_TCP_HOST</li>
+                    <li>KNA_TCP_STC</li>
+                </ul>
+                Verify that the following parameters that control the communications protocols used by the monitoring server and the NetView agent are correct:
+                <ul>
+                    <li>KDS_TEMS_COMM_PROTOCOLn, where n is a value 1-7.</li>
+                    <li>KDS_AGT_COMM_PROTOCOLn, where n is a value 1-7.</li>
+                    <li>KDS_TEMS_TCP_xxxxx_PORT_NUM, where <b>xxxxx</b> corresponds to the communications protocol (PIPE,UDP,PIPE6,UDP6,PIPES,PIPE6S).</li>
+                </ul>
+                Ensure that the <b>KDS_TEMS_KLX_TCP_TOLERATERECYCLE</b> parameter and <b>KNA_AGT_KLX_TCP_TOLERATERECYCLE</b> parameter are set to <b>Y</b>. This configuration enables the monitoring server and the NetView agent to reconnect to its TCP/IP stack without being recycled after the TCP/IP stack is recycled.
+            </li>
+        
+<div class="margin"><b>PPI sender and receiver names</b></div>
+        The <b>KNA_PPISND_PPI_SENDER_CNMEMATX</b> and <b>KNAA_PPIRCV_PPI_RECEIVER_CNMEMARX</b>
+parameters control the PPI sender and receiver names that are used by the NetView agent. The
+        sender name is controlled by the <b>KNA_PPISND_PPI_SENDER_CNMEMATX</b> parameter. The default
+        name is <b>CNMEMATX.</b> There is no matching <b>CNMSTYLE</b> statement. The receiver name is controlled
+        by the <b>KNA_PPIRCV_PPI_RECEIVER_CNMEMARX</b> parameter. This name must match the <b>DESTPPI</b>
+        receiver name that is specified in the <b>CNMSTYLE</b> member or its include member. The default value
+           is <b>CNMEMARX.</b><br><br>
+<b>Security settings to enable encryption for the monitoring server</b><br>
+<b>Security settings to enable Take Action command forwarding</b><br>  
+          System commands that are issued from the Tivoli Enterprise Portal by using Take Action
+commands or situations run without command authorization or an audit trail. You can use the
+NetView product to perform command authorization for these system commands and to provide
+an audit trail. Command authorization for the Take Action system commands uses the portal user
+ID, which is sent to the NetView program with the command. The portal user ID that is sent is used
+to determine the user ID that issues the command. When a command is sent from a situation, the
+user ID that is sent is the last one that edited the situation. Password validation is not performed.
+If a NetView operator ID exists that matches the portal user ID and has the required command
+authorization, the command is run on the existing NetView operator ID. For more information
+about protecting MVS system commands, see the IBM Tivoli Z NetView Security Reference. Some
+agents provide their own Take Action commands, known as agent commands. Agent commands
+have an associated two-character prefix for their product code. These commands are not sent to
+the NetView program for command authorization. The only agent commands that are sent to the
+        NetView program for authorization are the NetView agent commands prefixed with <b>NA.</b> For
+information about creating or editing a Take Action command, see the IBM Tivoli Monitoring: Tivoli
+Enterprise Portal User's Guide. You can display Take Action commands and command responses in
+        the <b>NetView Command Response</b> workspace. Additionally, you can display the BNH806I and
+        BNH807I audit trail messages in the <b>NetView Audit Log</b> workspace.<br><br>
+        Use the following parameters to enable command authorization checking for system commands sent
+from the hub monitoring server:<br>
+        <b>KDS_PPI_RECEIVER</b><br>
+        Specifies the name of the NetView PPI Receiver. The value must match the PPI receiver name
+        specified on the NetView APSERV command. The default value is <b>CNMPCMDR</b><br>
+        <b>KDS_PPI_SENDER</b><br>
+        <ul>Specifies a value for the PPI sender. If you do not specify a value, the job name of the monitoring
+server is used when the command is written to the NetView log. Equivalent parameters are
+available to enable command authorization checking for commands sent from the NetView agent.</ul><br>
+        <b>KNA_AGT_KGLHC_PPI_RECEIVER</b><br>
+        Specifies the name of the NetView PPI Receiver. The value must match the PPI receiver name
+        specified on the NetView APSERV command. The default value is <b>CNMPCMDR.</b><br>
+        <b>KNA_AGT_KGLHC_PPI_SENDER</b><br>
+        Specifies a value for the PPI sender.
+       <ul> <li> For definitions for the common parameters, see the IBM OMEGAMON and Tivoli Management
+Services on z/OS shared documentation.</li>
+        <li> For NetView agent definitions, see Appendix C, Enterprise Management Agent Changes.</li>
+        <li> For information about configuring security settings for a monitoring server running in a z/OS
+environment, see IBM OMEGAMON and Tivoli Management Services on z/OS shared
+documentation.</li></ul>
+        <li> Press <b>F3</b> to return to the menu panel.</li>
+        <li>. Select <b>Option 2</b> to review and specify global parameters. Review the default settings and update them
+            as necessary for your installation</li> <br>
+        <b>Usage notes:</b>
+           <ul>
+            <li> The global parameters define system data sets that include started task procedures, load modules,
+and configuration files. In many cases, the default high-level qualifier for the data set is SYS1.
+Review the global parameters starting with the GLBL_DSN_SYS1 parameter and verify that the
+correct data sets are defined.</li>
+            <li>The <b>GBL_DSN_NETVIEW_CNMLINK</b> parameter specifies the name of the NetView CNMLINK data set.
+The default is set to <b>NETVIEW.VNRNMN.CNMLINK</b>. You must change the
+<b>GBL_DSN_NETVIEW_CNMLINK</b> parameter. Update the parameter to the correct name of the NetView
+CNMLINK data set.</li>
+            </ul>
+            <li>Press <b>F3</b> to return to the menu panel.</li>
+            <li> Select <b>Option 4 (WCONFIG)</b>. Locate the KNA$PENV member and edit it. Verify that it contains the
+following statements:
+            <div class="back">
+                CTIRA_RECONNECT_WAIT = 60<br>
+CTIRA_HEARTBEAT = 1
+                </div>
+                For more information about the <em>CTIRA_</em> environment variables, see the <em>IBM Tivoli Monitoring:
+Installation and Setup Guide.</em>
+            </li>
+            <li> Press <b>F3</b> again to return to the <b>Parameter Generator (PARMGEN) Workflow</b> panel.</li>
+            
+            
+        </ol>   
+        <div class="subheading">
+            Option 3. Creating the RTE members and jobs</div>
+            <div class="margin">
+                <b>About this task</b>
+To create the RTE member and jobs, complete the following steps:
+<b>Procedure</b>
+    </div>
+    <ol>
+  <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select <b>Option 3</b> to create the RTE members and jobs. Prior to creating the runtime environment, the PARMGEN tool stores the specified configuration in a set of members in a working library. These members are used to create the configuration files in the runtime environment.</li>
+  <li>Select <b>Option 1</b> to edit the composite <b>$PARSE</b> job.</li>
+  <li>Review and submit the <b>KCIJPPRS</b> job. Verify that the job ends with a 0 return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+  <li>Press <b>F3</b> to display messages for the submitted job.</li>
+  <li>Press <b>Enter</b> to return to the menu panel.</li>
+        <li>. Press <b>F3</b> to return to the <b>Parameter Generator (PARMGEN) Workflow</b> panel.</li>
+</ol>
+<div class="subheading">
+    Option 4. Submitting batch jobs to complete the PARMGEN setup</div>
+    <div class="margin">
+        <b>About this task</b><br>
+To complete the PARMGEN setup, you need to submit the batch jobs by performing the following steps:<br>
+<b>Procedure</b><br>
+    <ol type="1">
+        <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select <b>Option 4</b> to submit batch jobs to
+complete the PARMGEN setup.</li>
+        <p>The <b>Submit Batch Jobs To Complete PARMGEN Setup</b> panel (KCIP@SUB) is displayed.</p>
+        <img src="img9.png">
+        <li> Choose one of the following approaches to submit jobs:
+        <ul>
+            <li>To submit some or all of the jobs needed for configuration in one step, select <b>Option 1</b> to edit the
+<b>KCIJPSUB</b> composite master submit job.</li>
+            <li> To submit jobs separately, select other options 2-12 to submit each job individually based on your
+requirements.</li>
+            </ul>
+        
+        </li>
+        <li>
+    Review and verify the jobs.
+    <ol type="a">
+      <li>If you are using the composite master job, ensure all the jobs you want to submit this way are selected. The jobs that will be submitted are listed under directory <code>./ ADD NAME=SUBLIST</code> in the KCIJPSUB job. The jobs that are commented out are not submitted. By default, the KCIJVSYS job and the KCIJPIVP job are not selected.</li>
+      <li>Verify whether the jobs end with the right return code. Verify that the jobs end with a 0 return code. If the KCIJPIVP job is selected, it might end with a 4 return code, because the composite master job did not run all the jobs.</li>
+      <li>If a job does not end with the expected return code, correct the individual job and resubmit it.</li>
+    </ol>
+  </li>
+  <li>Press F3 to display messages for the submitted job.</li>
+  <li>
+    To submit additional jobs, choose one of the following steps to complete based on your situation:
+    <ul>
+      <li>If you use the composite job, submit any additional jobs that were not selected in the KCIJPSUB job.</li>
+    </ul>
+  </li>
+                <li>If you don't use the composite job, submit any needed individual jobs from the<b> Submit Batch Jobs
+        To Complete PARMGEN Setup </b>panel.</li>
+         <p>For example, complete the following steps to submit the <b>KCIJPUSS, KCIJPSYS, KCIJPIVP,</b> and
+             <b>KCIJPW2R</b> jobs separately.</p>
+         <ol type="a">
+             
+             <li>Select <b>Option 7</b> to edit the USS system setup job.</li>
+  <li>Review and submit the <b>KCIJPUSS</b> job. Verify that the job ends with a <b>0</b> return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+  <li>Press <b>F3</b>to display messages for the submitted job.</li>
+    <li>Press <b>Enter</b> to return to the menu panel.</li>
+     <li>Select <b>Option 8</b> to edit the system setup job.</li>
+             <li>Review and submit the<b> KCIJPSYS</b> job. Verify that the job ends with a  <b>0</b> return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+             <li>Press <b>F3</b> to display messages for the submitted job.</li>
+  <li>Press <b>Enter</b> to return to the menu panel.</li>
+             <li>Select <b>Option 10</b> to edit the configuration verification job.</li>
+             <li>Review and submit the <b>KCIJPIVP</b> job. Verify that the job ends with a <b>0</b> or <b>4</b> return code. If the job does not end with a <b>0</b> or <b>4</b> return code, correct the job and resubmit it. If the job ends with a <b>4</b> return code, examine the job output for the reason.</li>
+             <li>Press <b>F3</b> to display messages for the submitted job.</li>
+             <li>Press <b>Enter</b> to return to the menu panel.</li>
+             <li>Select <b>Option 12</b> to edit the <b>WK*</b> to <b>RK*</b> deployment job.</li>
+             <li>Review and submit the <b>KCIJPW2R</b> job. Verify that the job ends with a  <b>0</b> or <b>4</b> return code. If the job does not end with a <b>0</b> or <b>4</b> return code, correct the job and resubmit it. If the job ends with a <b>4</b> return code, examine the job output for the reason.</li>
+             <li>Press <b>F3</b> to display messages for the submitted job.</li>
+             <li>Press <b>Enter</b> to return to the menu panel.</li>
+             <li>Press <b>F3</b> to return to the <b>Parameter Generator (PARMGEN) Workflow </b>panel.</li>
+             <li>Press <b>F3</b> twice to exit the PARMGEN tool.</li>
+</ol>
+    
+        </ol>
+    <div class="margin">
+        <b>What to do next</b><br>
+         When you complete the procedure in this section, continue with <u>Chapter 3, “Completing the NetView
+         agent configuration,” on page 27.</u>
+        </div>
+     <br><br>
+        <div class="heading2">Scenario 2: Converting an existing Configuration Tool RTE to PARMGEN and
+Updating it</div>
+    <div class="hline2"></div>
+   <br>
+        <div class="margin">
+        <b>About this task</b><br>
+        In this scenario, a full runtime environment (RTE) already exists, which was created by using the
+deprecated configuration tool. The existing environment has a hub Tivoli Enterprise Monitoring Server on
+a different host and a working Tivoli Enterprise Portal Server. This RTE contains a remote Tivoli Enterprise
+Monitoring Server into which the NetView agent connects.<br>
+Follow these steps to copy RTE parameters and configure a NetView agent into a new PARMGEN RTE
+based on the existing RTE.<br><br>
+        <b>Procedure</b>
+        </div>
+        <ol type="1">
+  <li>Create the batch parameter deck by using the configuration tool.</li>
+  <li>Start the PARMGEN tool.</li>
+            <li>Use the <b>KCIJPCFG</b> job to set up PARMGEN work environment for an RTE.</li>
+  <li>Customize PARMGEN configuration profiles.</li>
+  <li>Create the RTE members and jobs.</li>
+  <li>Submit batch jobs to complete the PARMGEN setup.</li>
+</ol>
+        <h3>Creating the batch parameter deck by using the configuration tool</h3>
+        <b>About this task</b><br>
+        Follow these steps to use the configuration tool to create a batch parameter deck that you will use to
+configure the NetView agent.<br>
+        <b>Procedure</b>
+<ol>
+  <li>Log on to a TSO session.</li>
+  <li>Enter ISPF.</li>
+    <li>From the <b>Primary Option Menu,</b> enter Option 6 (Command).</li>
+  <li>Start the configuration tool. For example, from the command line enter the following command:
+      
+      where &amp;shilev is the high-level qualifier that you specified when you created the INSTLIB data set. The configuration tool Main Menu ID displayed.</li>
+  <li>From the configuration tool Main Menu, enter 3. The Configure Products panel is displayed.</li>
+  <li>Enter 1 to display the Product Selection menu.</li>
+  <li>Enter S to select the NetView agent.</li>
+  <li>Enter Z to select the RTE to be used as the source of the batch parameter deck.</li>
+    <li>Enter 1 to display the <b>Create/Clone Parameter</b> Deck panel.</li>
+    <li>Enter 1 to display the <b>Create Batch Mode Parameters</b> panel.</li>
+    <li>From the <b>Create Batch Mode Parameters</b> panel, specify a value for the following fields and then press <b>Enter:</b><br>
+      <b>Parameter Library: </b><br>The data set where the parameter deck will be located.<br>
+        <b>Member Name:</b><br> The member name into which the parameter deck is written.    
+  </ol>
+        <h3>Starting the PARMGEN tool</h3>
+        <div class="margin">
+        <b>About this task</b><br>
+        Follow these steps to start the PARMGEN tool:<br><br>
+        <b>Procedure</b>
+        
+        </div>
+        <ol>
+  <li>Log on to a TSO session.</li>
+  <li>Enter ISPF.</li>
+            <li>From the <b>Primary Option Menu,</b> enter Option 6 (Command).</li>
+  <li>If you are using a 3270 Model 2 (24 x 80) display, turn off the predefined function (PF) keys so that the function keys are not truncated. To do this, enter PFSHOW on the command line and repeat this command until the ISPF default function keys are no longer displayed.</li>
+
+         <li> From the command line, enter the following command:
+            <div class="back">
+            EX ’&shilev.TKANCUS’
+            </div><br>
+            where &shilev is the high-level qualifier that you specified when you installed Tivoli Management
+Services.<br>
+                A panel similar to the following one is displayed:<br>
+                <div class="back"><br>
+            KCIPQPGW<br>
+            <center>Welcome to the z/OS Installation and Configuration Tools for<br> 
+ z Systems Management Suites</center>
+            <ol type="1">
+                    <li> Checklist: System preparation checklists <br>
+ Tip: Read/Print Checklists prior to installation and configuration.</li>
+                    <li> Installation Workflow: <br>
+ SMP/E-install z/OS products with Install Job Generator (JOBGEN) <br>
+ Conditional: JOBGEN is not required when using SystemPac or ServerPac.</li>
+                <li> Configuration Workflow (Post-installation): <br>
+ Configure z/OS products with Parameter Generator Workflow (PARMGEN)
+                </li>
+                    </ol>
+                    <ol type="I">
+                    <li> What's New in PARMGEN? <=== Revised<br>
+                    
+                    <br><br><br>
+                     Maintenance Level: HKCI310 PTF UA91952 (APAR OA51755 2Q17 Interim Feature)
+                    <center>©Copyright IBM Corporation 1992-2019 <br>
+ Licensed Material - Program Property of</center><br>
+                    IBM<br>
+                         Option ===>
+                        <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+                        </li></ol>
+                </div>
+            </li>
+            <li>Review the checklists by selecting Option 1.</li>
+  <li>You can skip Option 2 if you have already completed this step when you installed Tivoli Management Services.</li>
+  <li>For the Quick configuration, from the z/OS Installation and Configuration Tools panel, select Option 3 to display the Parameter Generator (PARMGEN) Workflow panel. A panel similar to the following is displayed.<br>
+            <div class="back"><br>
+      KCIPQPGA -------- PARAMETER GENERATOR (PARMGEN) WORKFLOW MENU -----------------<br>
+ Command ===><br>
+      <center>Quick Configuration Mode</center>
+            Enter parameter values appropriate for the LPAR runtime environment (RTE).<br>     
+            
+                <table>
+                <tr>
+                    <td> GBL_USER_JCL:<br><br><br><br><br><br></td>
+                    <td>NETVIEW.V621RTE.JCL________________________ <br>
+ (for example, TDSF72.ITM63.DS630.SYSPLEX.PARMGEN.JCL) <br>
+ Specify the dataset name of the PARMGEN common/global <br>
+ library for the different LPAR runtime environments (RTEs).<br> 
+ Use the same dataset for managing the different LPAR RTEs. <br>
+ Multiple users can specify the same dataset to manage RTEs.</td>
+                    
+                    </tr>
+                <tr>
+                    <td>RTE_PLIB_HILEV:<br><br><br><br><br><br></td>
+                    <td> NETVIEW.V621RTE_______________ <br>
+ Specify the High-Level Qualifier (&hlq) portion of the <br>
+ PARMGEN interim staging and work libraries for this LPAR RTE:<br> 
+ - &hlq.&rte_name.IK* (IKANCMDU,IKANPARU,IKANSAMU) <br>
+ - &hlq.&rte_name.WK* (WKANCMDU,WKANPARU,WKANSAMU) <br>
+ - &hlq.&rte_name.WCONFIG</td>
+                    </tr>
+                <tr>
+                    <td>RTE_NAME:</td>
+                    <td>CNM01_ (Type ? for a list of configured RTEs) <br>
+ Specify the runtime environment (&rte_name) for this LPAR.</td>
+                    </tr>
+                
+                
+                
+                </table>
+                
+           Press F1=Help for more information. Type U or UTIL to access utility menu.<br>
+                <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+      </div>
+         <b>Note:</b> PARMGEN has two types of installation modes: Quick configuration and Standard configuration.
+This scenario documents the Quick configuration, which is the recommended method. For more
+information about the Standard configuration method, see Appendix <em>Configuring the NetView agent by
+using the PARMGEN standard configuration method</em> and the OMEGAMON shared publications.    
+            </li>
+            <li>Enter the following parameter values for your environment:<br>
+           <b> GBL_USER_JCL</b><br>
+The name of a JCL library to be created for PARMGEN jobs, for example, NETVIEW.V621RTE.JCL.<br>
+<b>RTE_PLIB_HILEV</b><br>
+The high-level qualifier for PARMGEN work libraries, for example, NETVIEW.V621RTE.<br>
+<b>RTE_NAME</b><br>
+The name of the runtime environment to be created, for example, CNM01.
+Press Enter after you fill in the parameter values. If the GBL_USER_JCL library that you specified on
+the <b>Parameter Generator (PARMGEN) Workflow</b> panel does not exist, a message is displayed. Press
+Enter to allocate the JCL library and proceed to the main options panel for PARMGEN:<br>
+            
+                <div class="back">
+                    KCIPQPGB PARAMETER GENERATOR (PARMGEN) WORKFLOW - PRIMARY OPTION MENU --------<br>
+ Option ===><br>
+                        <center>Quick Configuration Mode</center>
+                 GBL_USER_JCL: NETVIEW.V621RTE.JCL<br> 
+ RTE_PLIB_HILEV: NETVIEW.V621RTE <br>
+ RTE_NAME: CNM01<br>
+                        <table>
+                        <tr>
+                            <td>Notes:<br><br><br><br></td>
+                            <td> Perform steps 1 through 5 in sequence, repeating steps as necessary. <br>
+ If reconfiguring this RTE, see Maintenance Scenarios F1=Help topic. <br>
+ Enter n (1-5) to perform tasks. <br>
+ Enter ns (1s-5s) for detailed job/task status.</td>
+                            </tr>
+                        </table>
+                        <table border="0px">
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>Description</td>
+                            <td>Job/Label</td>
+                            <td>Status</td>
+                            <td>Date</td>
+                            
+                            </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td>--------------------------------------------</td>
+                            <td>---------</td>
+                            <td>---------</td>
+                            <td>----------</td>
+                            </tr>
+                            <tr>
+                            <td>1.</td>
+                            <td>Set up/Refresh PARMGEN work environment.</td>
+                                <td>KCIJPCFG</td>
+                                <td>RC= 00000</td>
+                                <td>2017/02/22</td>
+                            </tr>
+                            <tr>
+                            <td>2.</td>
+                            <td>Customize PARMGEN configuration profiles.</td>
+                            <td>CNM01</td>
+                                <td>Edited</td>
+                                <td>2015/02/27</td>
+                            </tr>
+                            <tr>
+                            <td>3.</td>
+                            <td>Create this RTE's runtime members and jobs.</td>
+                            <td>$PARSE</td>
+                            <td>Enter 3</td>
+                            <td>for details.</td>
+                            </tr>
+                            <tr>
+                            <td>4.</td>
+                            <td>Submit batch jobs to complete PARMGEN setup.</td>
+                            <td>SUBMIT</td>
+                            <td>Enter 4</td>
+                            <td>for details.</td>
+                            </tr>
+                            <tr>
+                            <td>5.</td>
+                            <td>Perform post configuration steps.</td>
+                            <td>POSTCFG</td>
+                            </tr>
+                            <tr>
+                            <td>R</td>
+                            <td>Create next RTE - Reset fields.</td>
+                            <td>New RTE</td>
+                            </tr>
+                        </table><br>
+                         Press F1=Help for more information. Type U or UTIL to access utility <br>
+menu. <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+                        </div>
+                    
+</ol>
+        </div><br>
+            <div class="subheading">
+        Option 1. KCIJPCFG Setting up PARMGEN work environment for an RTE
+        </div>
+           <br><br> 
+            <div class="margin">
+    <b>About this task</b><br>
+            To use the KCIJPCFG job to set up PARMGEN work environment for an RTE, complete the following
+steps:<br><br>
+            <b>Procedure</b>
+            <ol>
+        <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select Option 1 to display the <b>Set Up</b>
+<b>PARMGEN Work Environment</b> panel (1 of 3).</li>
+                <div class="back">
+                KCIPQPG1 SET UP/REFRESH PARMGEN WORK ENVIRONMENT FOR AN RTE (1 OF 3) ---------
+                <center>Quick Configuration Mode</center>
+                 Specify the RTE model profile to use: <br>
+ ==> ?__________________________<br>
+                    
+                    - To create a new RTE based on a predefined IBM model, type a ? in <br>
+ the field and press Enter, then select the appropriate template. <br>
+ - To create a new RTE that is a clone of an existing PARMGEN RTE, <br>
+ specify the WCONFIG profile library and RTE member name to clone; <br>
+ for example: (&hlq.&rte.WCONFIG(&clone_from)) <br>
+ - To create a new RTE that is a clone of an ICAT-created RTE, <br>
+ specify the ICAT RTE Batch member location and RTE member; <br>
+ for example: (&hlq.ICAT.INSTJOBS(CNM01)) <br>
+ - To create a new RTE from scratch, leave this field blank. <br>
+ - To reconfigure or upgrade this existing PARMGEN RTE, specify its values; <br>
+ for example: (NETVIEW.V621RTE.CNM01.WCONFIG(CNM01))<br>
+                 Customize jobcard data: <br>
+ ==> //USER1A JOB NOTIFY=&SYSUID,____________________________________________<br> 
+ ==> // CLASS=A,MSGCLASS=A,MSGLEVEL=(1,1)__________________________ <br>
+ ==> //*______________________________________________________________________ <br>
+ ==> //*______________________________________________________________________<br>
+                    
+                     Specify the Install Job Generator (JOBGEN) output library if you want 
+ PARMGEN to reuse CALLLIBS parameters from the JOBGEN repository:
+                    ==> ____________________________________________ <br>
+ (Type ? for last referenced JOBGEN library discovered, if any.) <br>
+ 
+ Press F1=Help for more information. Type U or UTIL to access utility <br>
+menu. <br>
+ 
+ Command ===>
+                    <table>
+                        <tr>
+                            <td>F1=HELP</td>
+                            <td>F2=SPLIT</td>
+                            <td>F3=END</td>
+                            <td>F4=RETURN</td>
+                            <td>F5=RFIND</td>
+                            <td>F6=RCHANGE</td>
+                            </tr>
+                            <tr>
+                            <td>F7=UP</td>
+                            <td>F8=DOWN</td>
+                            <td>F9=SWAP</td>
+                            <td>F10=LEFT</td>
+                            <td>F11=RIGHT</td>
+                                <td>F12=RETRIEVE</td>
+                            </tr>
+                        </table>
+                    
+                </div>
+            </li>
+            <li>. From the Set Up PARMGEN Work Environment panel, enter the location of the batch parameter deck
+and enter a job statement to be used for PARMGEN jobs.<br>
+For example, use the following code:
+                <div class="back"><br>
+                //USER1A JOB MSGLEVEL=1,MSGCLASS=A,NOTIFY=USER1<br>
+                </div> 
+                </li>
+                
+      </ol>
+
+    </div>
+        
+        
+    <li> From the <b>Set Up PARMGEN Work Environment</b> panel (2 of 3), specify a value for the following fields,
+and press <b>Enter:</b></li>
+                <b>GBL_TARGET_HILEV</b><br>
+The high-level qualifier for your SMP/E target libraries, for example, NETVIEW.V6R3M0.<br>
+<b>GBL_SYSDA_UNIT</b><br>
+The disk unit name for non-VSAM data sets, for example, SYSDA.<br>
+<b>GBL_REGION</b><br>
+Region size that the generated jobs will use.<br>
+             <li>From the <b>Set Up PARMGEN Work Environment</b> panel (3 of 3), enter any values that are required by your installation for creating new data sets. Press <b>Enter</b>.</li>
+  <li>The <b>Display PARMGEN Environment Analysis</b> panel lists the components that are installed in your TKANCUS data set. Press <b>Enter</b> to display the Include Products in the <b>PARMGEN Customization</b> panel.</li>
+  <li>To include any products in the <b>PARMGEN customization</b> panel, enter / or S to the left of the product code. <br>By default, all products are preselected for customization. When you finish, specify Y in the confirm field, and press <b>Enter</b>.</li>
+  <li>Review and submit the <b>KCIJPCFG</b> job. Verify that the job ends with a <b>0</b> return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+  <li>Press <b>F3</b> to display messages for the submitted job.</li>
+  <li>Press <b>Enter</b> to return to the <b>Parameter Generator (PARMGEN) Workflow</b> panel.<br> Note the status and date on the right of the step that you just completed.</li>   
+                 </ol>
+        <div class="subheading">
+        Option 2. Customizing PARMGEN configuration profiles
+        </div>
+       <div class="margin">
+           <b>About this task</b><br>
+        To edit PARMGEN configuration profiles, complete the following steps:<br>
+           <b>Procedure</b></div>
+        <ol>
+            <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select <b>Option 2</b> to customize configuration profiles. Use this option to override or specify values for the NetView agent configuration files.
+                <p>Most of the IBM Tivoli Monitoring and NetView agent parameters are set in the <b>RTE LPAR</b> profile. Use the global parameters selection to specify the location of key libraries on your system.</p>
+        <p>Use a TSO editor to customize the files. Some optional values are commented out. If you modify any of these values, ensure that you also uncomment the statements.</p>
+    </li>
+            <li>Select <b>Option 1</b> to customize the RTE LPAR profile.</li>
+            <li>The <b>CONFIGURE_PRODUCTS</b> section shows the products that are included or excluded. Review the default settings and update them as necessary for your installation. Parameters beginning with KDS are for the monitoring server. The NetView agent uses parameters beginning with KNA.
+        <p>Ensure that you review and update the following parameters:</p>
+        
+                <b>Type of monitoring server (hub):</b><br> This parameter is controlled by the <b>KDS_TEMS_TYPE</b> parameter. This parameter is set to HUB. For the NetView agent to connect to the monitoring server, ensure that the <b>KNA_TEMS_LOCAL_CONNECT_FLAG</b> parameter is set to <b>Y</b> and that the <b>KNA_TEMS_TCP_HOST</b> parameter is correct.<br><br>
+                <b>Communications-related information, for example TCP addresses:</b><br>
+                Use a fully-qualified host name or TCPIP address. The addresses are assigned default values. Verify that the following monitoring server parameters are correct:
+                <ul>
+                    <li>RTE_TCP_HOST</li>
+                    <li>RTE_TCP_PORT_NUM</li>
+                    <li>RTE_TCP_STC</li>
+                </ul>
+                Verify that the following NetView agent parameters are correct:
+                <ul>
+                    <li>KNA_AGT_TCP_HOST</li>
+                    <li>KNA_TCP_STC</li>
+                </ul>
+                Verify that the following parameters that control the communications protocols used by the monitoring server and the NetView agent are correct:
+                <ul>
+                    <li>KDS_TEMS_COMM_PROTOCOLn, where n is a value 1-7.</li>
+                    <li>KDS_AGT_COMM_PROTOCOLn, where n is a value 1-7.</li>
+                    <li>KDS_TEMS_TCP_xxxxx_PORT_NUM, where <b>xxxxx</b> corresponds to the communications protocol (PIPE,UDP,PIPE6,UDP6,PIPES,PIPE6S).</li>
+                </ul>
+                Ensure that the <b>KDS_TEMS_KLX_TCP_TOLERATERECYCLE</b> parameter and <b>KNA_AGT_KLX_TCP_TOLERATERECYCLE</b> parameter are set to <b>Y</b>. This configuration enables the monitoring server and the NetView agent to reconnect to its TCP/IP stack without being recycled after the TCP/IP stack is recycled.
+            </li>
+        
+<div class="margin"><b>PPI sender and receiver names</b></div>
+        The <b>KNA_PPISND_PPI_SENDER_CNMEMATX</b> and <b>KNAA_PPIRCV_PPI_RECEIVER_CNMEMARX</b>
+parameters control the PPI sender and receiver names that are used by the NetView agent. The
+        sender name is controlled by the <b>KNA_PPISND_PPI_SENDER_CNMEMATX</b> parameter. The default
+        name is <b>CNMEMATX.</b> There is no matching <b>CNMSTYLE</b> statement. The receiver name is controlled
+        by the <b>KNA_PPIRCV_PPI_RECEIVER_CNMEMARX</b> parameter. This name must match the <b>DESTPPI</b>
+        receiver name that is specified in the <b>CNMSTYLE</b> member or its include member. The default value
+           is <b>CNMEMARX.</b><br><br>
+<b>Security settings to enable encryption for the monitoring server</b><br>
+<b>Security settings to enable Take Action command forwarding</b><br>  
+          System commands that are issued from the Tivoli Enterprise Portal by using Take Action
+commands or situations run without command authorization or an audit trail. You can use the
+NetView product to perform command authorization for these system commands and to provide
+an audit trail. Command authorization for the Take Action system commands uses the portal user
+ID, which is sent to the NetView program with the command. The portal user ID that is sent is used
+to determine the user ID that issues the command. When a command is sent from a situation, the
+user ID that is sent is the last one that edited the situation. Password validation is not performed.
+If a NetView operator ID exists that matches the portal user ID and has the required command
+authorization, the command is run on the existing NetView operator ID. For more information
+about protecting MVS system commands, see the IBM Tivoli Z NetView Security Reference. Some
+agents provide their own Take Action commands, known as agent commands. Agent commands
+have an associated two-character prefix for their product code. These commands are not sent to
+the NetView program for command authorization. The only agent commands that are sent to the
+        NetView program for authorization are the NetView agent commands prefixed with <b>NA.</b> For
+information about creating or editing a Take Action command, see the IBM Tivoli Monitoring: Tivoli
+Enterprise Portal User's Guide. You can display Take Action commands and command responses in
+        the <b>NetView Command Response</b> workspace. Additionally, you can display the BNH806I and
+        BNH807I audit trail messages in the <b>NetView Audit Log</b> workspace.<br><br>
+        Use the following parameters to enable command authorization checking for system commands sent
+from the hub monitoring server:<br>
+        <b>KDS_PPI_RECEIVER</b><br>
+        Specifies the name of the NetView PPI Receiver. The value must match the PPI receiver name
+        specified on the NetView APSERV command. The default value is <b>CNMPCMDR</b><br>
+        <b>KDS_PPI_SENDER</b><br>
+        <ul>Specifies a value for the PPI sender. If you do not specify a value, the job name of the monitoring
+server is used when the command is written to the NetView log. Equivalent parameters are
+available to enable command authorization checking for commands sent from the NetView agent.</ul><br>
+        <b>KNA_AGT_KGLHC_PPI_RECEIVER</b><br>
+        Specifies the name of the NetView PPI Receiver. The value must match the PPI receiver name
+        specified on the NetView APSERV command. The default value is <b>CNMPCMDR.</b><br>
+        <b>KNA_AGT_KGLHC_PPI_SENDER</b><br>
+        Specifies a value for the PPI sender.
+       <ul> <li> For definitions for the common parameters, see the IBM OMEGAMON and Tivoli Management
+Services on z/OS shared documentation.</li>
+        <li> For NetView agent definitions, see Appendix C, Enterprise Management Agent Changes.</li>
+        <li> For information about configuring security settings for a monitoring server running in a z/OS
+environment, see IBM OMEGAMON and Tivoli Management Services on z/OS shared
+documentation.</li></ul>
+        <li> Press <b>F3</b> to return to the menu panel.</li>
+        <li>. Select <b>Option 2</b> to review and specify global parameters. Review the default settings and update them
+            as necessary for your installation</li> <br>
+        <b>Usage notes:</b>
+           <ul>
+            <li> The global parameters define system data sets that include started task procedures, load modules,
+and configuration files. In many cases, the default high-level qualifier for the data set is SYS1.
+Review the global parameters starting with the GLBL_DSN_SYS1 parameter and verify that the
+correct data sets are defined.</li>
+            <li>The <b>GBL_DSN_NETVIEW_CNMLINK</b> parameter specifies the name of the NetView CNMLINK data set.
+The default is set to <b>NETVIEW.VNRNMN.CNMLINK</b>. You must change the
+<b>GBL_DSN_NETVIEW_CNMLINK</b> parameter. Update the parameter to the correct name of the NetView
+CNMLINK data set.</li>
+            </ul>
+            <li>Press <b>F3</b> to return to the menu panel.</li>
+            <li> Select <b>Option 4 (WCONFIG)</b>. Locate the KNA$PENV member and edit it. Verify that it contains the
+following statements:
+            <div class="back">
+                CTIRA_RECONNECT_WAIT = 60<br>
+CTIRA_HEARTBEAT = 1
+                </div>
+                For more information about the <em>CTIRA_</em> environment variables, see the <em>IBM Tivoli Monitoring:
+Installation and Setup Guide.</em>
+            </li>
+            <li> Press <b>F3</b> again to return to the <b>Parameter Generator (PARMGEN) Workflow</b> panel.</li>
+            
+            
+        </ol>   
+        <div class="subheading">
+            Option 3. Creating the RTE members and jobs</div>
+            <div class="margin">
+                <b>About this task</b>
+To create the RTE member and jobs, complete the following steps:
+<b>Procedure</b>
+    </div>
+    <ol>
+  <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select <b>Option 3</b> to create the RTE members and jobs. Prior to creating the runtime environment, the PARMGEN tool stores the specified configuration in a set of members in a working library. These members are used to create the configuration files in the runtime environment.</li>
+  <li>Select <b>Option 1</b> to edit the composite <b>$PARSE</b> job.</li>
+  <li>Review and submit the <b>KCIJPPRS</b> job. Verify that the job ends with a 0 return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+  <li>Press <b>F3</b> to display messages for the submitted job.</li>
+  <li>Press <b>Enter</b> to return to the menu panel.</li>
+        <li>. Press <b>F3</b> to return to the <b>Parameter Generator (PARMGEN) Workflow</b> panel.</li>
+</ol>
+<div class="subheading">
+    Option 4. Submitting batch jobs to complete the PARMGEN setup</div>
+    <div class="margin">
+        <b>About this task</b><br>
+To complete the PARMGEN setup, you need to submit the batch jobs by performing the following steps:<br>
+<b>Procedure</b><br>
+    <ol type="1">
+        <li>From the <b>Parameter Generator (PARMGEN) Workflow</b> panel, select <b>Option 4</b> to submit batch jobs to
+complete the PARMGEN setup.</li>
+        <p>The <b>Submit Batch Jobs To Complete PARMGEN Setup</b> panel (KCIP@SUB) is displayed.</p>
+        <img src="img9.png">
+        <li> Choose one of the following approaches to submit jobs:
+        <ul>
+            <li>To submit some or all of the jobs needed for configuration in one step, select <b>Option 1</b> to edit the
+<b>KCIJPSUB</b> composite master submit job.</li>
+            <li> To submit jobs separately, select other options 2-12 to submit each job individually based on your
+requirements.</li>
+            </ul>
+        
+        </li>
+        <li>
+    Review and verify the jobs.
+    <ol type="a">
+      <li>If you are using the composite master job, ensure all the jobs you want to submit this way are selected. The jobs that will be submitted are listed under directory <code>./ ADD NAME=SUBLIST</code> in the KCIJPSUB job. The jobs that are commented out are not submitted. By default, the KCIJVSYS job and the KCIJPIVP job are not selected.</li>
+      <li>Verify whether the jobs end with the right return code. Verify that the jobs end with a 0 return code. If the KCIJPIVP job is selected, it might end with a 4 return code, because the composite master job did not run all the jobs.</li>
+      <li>If a job does not end with the expected return code, correct the individual job and resubmit it.</li>
+    </ol>
+  </li>
+  <li>Press F3 to display messages for the submitted job.</li>
+  <li>
+    To submit additional jobs, choose one of the following steps to complete based on your situation:
+    <ul>
+      <li>If you use the composite job, submit any additional jobs that were not selected in the KCIJPSUB job.</li>
+    </ul>
+  </li>
+                <li>If you don't use the composite job, submit any needed individual jobs from the<b> Submit Batch Jobs
+        To Complete PARMGEN Setup </b>panel.</li>
+         <p>For example, complete the following steps to submit the <b>KCIJPUSS, KCIJPSYS, KCIJPIVP,</b> and
+             <b>KCIJPW2R</b> jobs separately.</p>
+         <ol type="a">
+             
+             <li>Select <b>Option 7</b> to edit the USS system setup job.</li>
+  <li>Review and submit the <b>KCIJPUSS</b> job. Verify that the job ends with a <b>0</b> return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+  <li>Press <b>F3</b>to display messages for the submitted job.</li>
+    <li>Press <b>Enter</b> to return to the menu panel.</li>
+     <li>Select <b>Option 8</b> to edit the system setup job.</li>
+             <li>Review and submit the<b> KCIJPSYS</b> job. Verify that the job ends with a  <b>0</b> return code. If the job does not end with a <b>0</b> return code, correct the job and resubmit it.</li>
+             <li>Press <b>F3</b> to display messages for the submitted job.</li>
+  <li>Press <b>Enter</b> to return to the menu panel.</li>
+             <li>Select <b>Option 10</b> to edit the configuration verification job.</li>
+             <li>Review and submit the <b>KCIJPIVP</b> job. Verify that the job ends with a <b>0</b> or <b>4</b> return code. If the job does not end with a <b>0</b> or <b>4</b> return code, correct the job and resubmit it. If the job ends with a <b>4</b> return code, examine the job output for the reason.</li>
+             <li>Press <b>F3</b> to display messages for the submitted job.</li>
+             <li>Press <b>Enter</b> to return to the menu panel.</li>
+             <li>Select <b>Option 12</b> to edit the <b>WK*</b> to <b>RK*</b> deployment job.</li>
+             <li>Review and submit the <b>KCIJPW2R</b> job. Verify that the job ends with a  <b>0</b> or <b>4</b> return code. If the job does not end with a <b>0</b> or <b>4</b> return code, correct the job and resubmit it. If the job ends with a <b>4</b> return code, examine the job output for the reason.</li>
+             <li>Press <b>F3</b> to display messages for the submitted job.</li>
+             <li>Press <b>Enter</b> to return to the menu panel.</li>
+             <li>Press <b>F3</b> to return to the <b>Parameter Generator (PARMGEN) Workflow </b>panel.</li>
+             <li>Press <b>F3</b> twice to exit the PARMGEN tool.</li>
+</ol>
+        
+        </ol>
+    <div class="margin">
+        <b>What to do next</b><br>
+         When you complete the procedure in this section, continue with <u>Chapter 3, “Completing the NetView
+         agent configuration,” on page 27.</u>
+        </div>
+     <br><br>    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
+
+
+
+
+
+
+
+
+<div class="hline"></div>
+    <div class="heading"><b>Chapter 3. Completing the NetView agent<br>
+configuration</b></div><br>
+        <div class="margin">
+To complete the configuration of the NetView agent with a Tivoli Enterprise Monitoring Server running in a
+z/OS environment, follow these procedures:
+            <ol type="1">
+            <li><u>“Updating NetView initialization statements” on page 28</u></li>
+                <li><u>“Loading the agent data files and configuring the portal” on page 29</u></li>
+                <li><u>“Adding application support to the Tivoli Enterprise Monitoring Server” on page 32
+</u></li>
+                
+            </ol>
+</div><br><br>
+<div class="heading2">APF-authorizing your libraries</div>
+    <div class="hline2"></div>
+        <div class="margin">
+Ensure that the following libraries are APF-authorized:
+            <ul>
+  <li>CNMLINK (authorized when you installed the NetView program)</li>
+  <li>RKANMOD</li>
+  <li>RKANMODL</li>
+  <li>RKANMODU</li>
+  <li>Any runtime libraries that are concatenated in the STEPLIB DDNAME and in the RKANMODL DDNAME of the IBMNA and IBMDS started tasks</li>
+</ul>
+
+           For information on APF-authorizing these data sets, refer to <em>IBM Z NetView Installation: Getting Started.</em> 
+            </div><br><br>
+<div class="heading2">Authorizing the KPDDSCO program</div>
+    <div class="hline2"></div>
+        <div class="margin">
+   Persistent data store maintenance uses the KPDDSCO program. This program must run as an authorized
+program under TSO.<br>
+To authorize the KPDDSCO program, update the IKJTSOxx member in the SYS1.PARMLIB data set. For
+information on authorizing this program, refer to <em>IBM Z NetView Installation: Getting Started.</em>
+You can refresh the IKJTSOnn member by issuing the following SET command:<br>
+<div class="back">
+            T IKJTSO=nn
+            </div>
+            </div>
+<br><br>
+<div class="heading2">Copying the started task procedures to your procedure library</div>
+    <div class="hline2"></div>
+        <div class="margin">
+You used the configuration tool to create started task procedures in the RKANSAMU data set. To
+complete the configuration, do these steps:
+            <ol>
+  <li>Copy the Tivoli Enterprise Monitoring Server started task (IBMDS) from the RKANSAMU data set to your PROCLIB data set.</li>
+  <li>Copy the NetView agent started task (IBMNA) from the RKANSAMU data set to your PROCLIB data set.</li>
+  <li>The started task procedures include a SYSTCPD DD statement that is commented out. Tivoli Management Services requires that host names be resolvable by TCP/IP. If your environment does not include a domain name service, uncomment this DD statement and modify it to comply with your environment.</li>
+  <li>Copy the persistent data store maintenance procedure (KPDPROC1) from the RKANSAMU data set to your PROCLIB data set.</li>
+</ol>
+
+
+</div><br><br>
+<div class="heading2">Starting the hub Tivoli Enterprise Monitoring Server</div>
+    <div class="hline2"></div>
+        <div class="margin">
+Before you begin the installation and configuration of the distributed components, start the hub Tivoli
+Enterprise Monitoring Server:
+<ol>
+            <li> From the z/OS system console, start the Tivoli Enterprise Monitoring Server. The following command
+uses the default started task procedure name:
+            <div class="back">
+    S IBMDS
+    
+                </div></li>
+    <li> To verify that the Tivoli Enterprise Monitoring Server started successfully, you should see the following
+message on the z/OS system console, in the SYSLOG data set, or in the RKLVLOG data set for the Tivoli
+Enterprise Monitoring Server started task procedure:
+    <div class="back">
+        
+        KO4SRV032 Tivoli Enterprise Monitoring Server (TEMS) startup complete.
+        </div>  
+    </li>
+</ol>
+</div>
+<br><br>
+<div class="heading2">Installing the Tivoli Management Services components</div>
+    <div class="hline2"></div>
+        <div class="margin">
+Tivoli Management Services consists of the following commonly shared components:
+</div>
+<ul>
+  <li>Tivoli Enterprise Portal Server and clients</li>
+  <li>Tivoli Data Warehouse</li>
+  <li>TMS:Engine</li>
+  <li>Event synchronization component</li>
+  <li>Tivoli Enterprise Portal Server extended services</li>
+</ul>
+<div class="margin">
+For a description of these components, see the <em>OMEGAMON XE and Tivoli Management Services on z/OS
+Common Planning and Configuration Guide</em>.
+For information on installing these components, refer to the <em>IBM Tivoli Monitoring: Installation and Setup
+Guide</em>.<br>
+    During the installation process, you must provide a host name or IP address for the hub Tivoli Enterprise
+Monitoring Server. When supplying the host name, provide the fully qualified host name. You are also
+required to enter passwords on some panels. For some operating systems, you are required to provide a
+password of 6 or more characters. Check the password requirements for your operating system before
+you begin the installation process.<br>
+After installing the Tivoli Enterprise Portal and Tivoli Enterprise Portal Server, verify the installation by
+locating the entries for the installed Tivoli Management Services components in the Manage Tivoli
+Enterprise Monitoring Services window. If the installation was not successful, check the installation log
+found in the <span><</span><span>install_dir</span><span>></span>\INSTALL\nnnTimestamp.log file (where nnn is the title of the DVD) to determine
+the problem and try the installation again.
+   
+</div><br><br>
+<div class="heading2">Updating NetView initialization statements</div>
+    <div class="hline2"></div>
+        <div class="margin">
+The CNMSTYLE member in the DSIPARM data set is used during NetView initialization. To make changes
+to a statement in the CNMSTYLE member, copy the statement to either the CNMSTUSR or CxxSTGEN
+member. You can then modify the statement. For information about changing CNMSTYLE statements, see
+<em>IBM Z NetView Installation: Getting Started</em>.<br>
+Update the following CNMSTYLE statements:<br>
+</div>
+<ol>
+    <li>If you did not already enable the Z NetView Enterprise Management Agent tower, delete the asterisk
+(*) preceding the TEMA tower in the TOWER statement.</li>
+    <li>. If you enabled the TEMA tower or changed any TEMA subtower statements, recycle the NetView
+program.</li>
+    </ol>
+<div class="margin">
+    <img src="img6.png">
+    </div><br><br>
+<div class="heading2">Loading the agent data files and configuring the portal</div>
+    <div class="hline2"></div>
+        <div class="margin">
+If the self-describing agent (SDA) function for the NetView agent has been enabled, it will update and
+configure the Tivoli Enterprise Portal agent and client. If it is not enabled, follow these procedures to load
+the NetView agent data files and to configure the Tivoli Management Services environment:
+
+    </div>
+<ul>
+    <li><u>“Loading files and configuring the Tivoli Enterprise Portal in a Windows environment” on page 29</u></li>
+    <li><u> “Loading files and configuring the Tivoli Enterprise Portal in the Linux and AIX environments” on page
+30</u></li>
+      </ul>
+<div class="margin">
+    For more information on the self-describing agent function, see <u>“Adding application support to the Tivoli
+Enterprise Monitoring Server” on page 32.</u>
+    </div>
+   <b>Loading files and configuring the Tivoli Enterprise Portal in a Windows environment</b> <br>
+   <div class="margin">
+     The NetView agent data files are found on the IBM Z NetView Enterprise Management Agent data files
+DVD. Do these steps to install the files.
+    </div>
+    
+    <ol>
+  <li>Log on to Windows using an ID with administrator authority.</li>
+  <li>Close any running applications.</li>
+  <li>Insert the Z NetView Enterprise Management Agent DVD into your DVD drive.
+    <ul>
+      <li>Installation begins automatically.</li>
+      <li>If the installation process does not start, run setup.exe from the Windows directory of the installation DVD. If setup.exe initialization fails, you might not have enough free disk space to decompress the setup files.</li>
+    </ul>
+  </li>
+  <li>From the Z NetView Enterprise Management Agent installation wizard Welcome window, click <b>Next</b>.<br> The Install Prerequisites window is displayed.</li>
+  <li>From the Install Prerequisites window, click <p>Next</p>. The Software License Agreement is displayed.</li>
+  <li>Read and accept the software license agreement. Click <b>Accept</b> to display the Select Features window.</li>
+  <li>Select <b>Tivoli Enterprise Portal Server and TEP Desktop Client.</b>
+    <p><b>Note:</b> If you are using a distributed Tivoli Enterprise Monitoring Server on the same server as the Tivoli Enterprise Portal Server, additional component check boxes are displayed.</p>
+  </li>
+  <li>Click <p>Next</p>. The Start Copying Files window is displayed.</li>
+  <li>Click <p>Next</p>. When the files have been copied, the Setup Type window is displayed.</li>
+  <li>Ensure that both <b>Configure Tivoli Enterprise Portal</b> and <b>Launch Manage Tivoli Enterprise Monitoring Services are</b> selected, and then click <b>Next</b>.
+    <p><b>Note:</b> If you are using a distributed Tivoli Enterprise Monitoring Server on the same server as the Tivoli Enterprise Portal Server, additional component check boxes are displayed.</p>
+  </li>
+  <li>In the remaining windows in the installation wizard, you are prompted to provide information specific to your environment.</li>
+  <li>When the installation wizard is finished, the InstallShield Wizard Complete window is displayed. The <b>Display the Readme file</b> check box should already be selected. Click <b>Finish</b> to exit the wizard.</li>
+  <li>Review the readme file and then close the window.</li>
+  <li>When the installation process completes:
+    <ul>
+      <li>The Manage Tivoli Enterprise Monitoring Services window is displayed.</li>
+      <li>If the Manage Tivoli Enterprise Monitoring Services window is not displayed, you can open it by clicking <b>Start &gt; Programs &gt; IBM Tivoli Monitoring &gt; Manage Tivoli Monitoring Services.</b></li>
+    </ul>
+  </li>
+  <li>Review the Tivoli Enterprise Portal Server Status field. If the server is not already started, right-click <b>Tivoli Enterprise Portal Server</b> and then click <b>Start</b>.</li>
+  <li>Uncomment the <b>USE_EGG1_FLAG=1</b> statement, in IBM\ITM\CNPS\kfwenv (Windows default directory).</li>
+  <li>To log on to Tivoli Enterprise Portal, right-click the <b>Tivoli Enterprise Portal Desktop</b> and then click <b>Start</b>. The default user ID is <b>sysadmin</b>. There is no default password when running with a Tivoli Enterprise Monitoring Server on a z/OS system.</li>
+  <li>Verify that the Enterprise Status window is displayed.</li>
+</ol> 
+    <b>Loading files and configuring the Tivoli Enterprise Portal in the Linux and AIX®
+environments</b>
+    <div class="margin">
+    To complete this process, the components on which you are to install support must be in the same
+directory structure as defined by the $install_dir environment variable or the value of the -h flag when
+using the install.sh installation script.<br><br>
+Do these steps to install the agent data files:
+    
+    </div>
+    <ol>
+    <li>Stop the Tivoli Enterprise Portal Server by entering the following command from the $install_dir/bin
+directory:
+        <div class="back">
+        ./itmcmd agent stop cq
+        </div>
+        </li>
+    <li>Run the following command from the installation media
+        <div class="back">
+        ./install.sh -h $install_dir
+        </div>
+        <em>$install_dir</em> is the home directory for the IBM Tivoli Monitoring products.
+        </li>
+    <li>When you are prompted for the IBM Tivoli Monitoring home directory, do one of the following steps:
+        <ul>
+        <li> Press Enter to accept the default directory (/opt/IBM/ITM).</li>
+            <li> Enter the full path to the installation directory that you used.</li>
+        </ul>
+        </li>
+        <li>When you are prompted for an installation option, enter 1 as shown in Figure 4 on page 30.
+        <div class="back"><br>
+            Select one of the following:<br><br>
+            <ol>
+  <li>Install products to the local host.</li>
+  <li>Install products to depot for remote deployment (requires TEMS).</li>
+  <li>Install TEMS support for remote seeding.</li>
+  <li>Exit install.</li>
+</ol>
+
+            <br><br>
+            Please enter a valid number: <b>1</b>
+            </div>
+       
+            <em>Figure 4. Installation option</em>
+            
+ </li>
+        <li>Review the license agreement and enter 1 to accept the terms of the agreement</li>
+        <li>. A list of currently installed products is displayed followed by a numbered list of categories for which
+product packages are available. Enter the number that corresponds to the <b>Tivoli Enterprise Portal
+Browser Client support</b> as shown in <u>Figure 5 on page 31</u>.
+        <div class="back"><br>
+            Product packages are available for the following operating systems <br>
+ and component support categories:<br><br>
+            <ol>
+                <li> Tivoli Enterprise Portal Browser Client support</li>
+                <li>Tivoli Enterprise Portal Server support</li>
+<li>Tivoli Enterprise Monitoring Server support</li>
+            
+            Type the number for the OS you want, or type "q" to quit selection: <b>1</b>
+            </ol>
+        </div>
+        <em>Figure 5. Installation components</em>
+        <li> At the prompt, enter y to confirm the request.</li>
+        <li>. When the next list of the components to install is displayed, enter the number that corresponds to
+the <b>IBM Z NetView Enterprise Management Agent</b> as shown in <u>Figure 6 on page 31.</u>
+        <div class="back">
+            <br>The following application supports are available for installation:<br><br>
+            <ol>
+                <li> IBM Z NetView Enterprise Management Agent V06.21.00.00</li>
+ <li>All of the above</li>
+            </ol>
+            </div>   
+        <em>Figure 6. Installation of the agent</em>
+        </li>
+        <li>At the prompt, enter y to confirm the installation. The installation begins.</li>
+        <li>
+  
+    Install the agent data files for each IBM Tivoli Monitoring component that is on the server, for example:
+    <ul>
+      <li>Tivoli Enterprise Portal Browser Client support</li>
+      <li>Tivoli Enterprise Portal Server support</li>
+      <li>Tivoli Enterprise Monitoring Server support</li>
+    </ul>
+    <ol type="a">
+      <li>Select the number corresponding to the component for which you want support.</li>
+      <li>At the prompt, enter 1 for Yes to confirm the request.</li>
+      <li>Select the number corresponding to IBM Z NetView Enterprise Management Agent.</li>
+      <li>At the prompt, enter 1 for Yes to confirm the request.</li>
+      <li>If you have additional components, enter 1 for Yes and repeat these steps for the next component.</li>
+    </ol>
+  </li>
+
+ 
+        
+        <li> After all of the components are installed, you are prompted whether you want to install additional
+products or product support packages. Enter n.</li>
+        <li> To configure the Tivoli Enterprise Portal Server with the new agent information, enter the following
+command from the <em>$install_dir/bin</em> directory:
+        <div class="back">
+            ./itmcmd config -A cq
+            </div>
+        </li>
+        <li>Complete the configuration as prompted. For information about configuring the Tivoli Enterprise Portal Server, refer to the IBM Tivoli Monitoring: Installation and Setup Guide.</li>
+<li>Uncomment the USE_EGG1_FLAG=1 statement, in opt/IBM/ITM/config/cq.ini (UNIX default directory).</li>
+<li>Start the portal server by entering the following command:
+        <div class="back">
+    ./itmcmd agent start cq
+    </div>
+        </li>
+
+        
+    </ol>
+    <br><br>
+    <div class="heading2">Adding application support to the Tivoli Enterprise Monitoring Server</div>
+    <div class="hline2"></div>
+        <div class="margin">
+    If you configured the NetView agent in an existing Tivoli Management Services environment, you must
+add application support to that Tivoli Enterprise Monitoring Server, unless the self-describing agent
+function is enabled. For a Tivoli Enterprise Monitoring Server that does not run in a z/OS environment, use
+the IBM Z NetView Enterprise Management Agent data files DVD to do this.<br><br>
+    <b>Using the self-describing agent</b><br>
+Enabling the self-describing capability ensures that the proper level of application data is installed in the
+Tivoli Enterprise Monitoring Server and Tivoli Enterprise Portal Server without manual installation of
+support files. If the self-description feature is activated, runtime verification checks for updated
+application data. If inconsistent conditions are detected, application data is propagated from the
+monitoring agent to the various monitoring servers, which are automatically updated without requiring
+recycling.<br>
+By default, support for self-describing agents is disabled on the hub monitoring server. To use this
+feature, you must enable it on the hub monitoring server and configure that particular runtime
+environment where the Tivoli Enterprise Monitoring Server resides to support it. For more information on
+enabling the self-describing agent, see the <em>IBM Tivoli OMEGAMON XE and Tivoli Management Services on
+z/OS: Common Planning and Configuration Guide</em>.<br>
+    If the self-describing agent is enabled, and there is a hub Tivoli Enterprise Monitoring Server configured in
+the runtime environment, and there are agents configured to run in the hub Tivoli Enterprise Monitoring
+Server, you might consider creating a high availability hub runtime environment and converting the hub
+Tivoli Enterprise Monitoring Server in this runtime environment to a remote Tivoli Enterprise Monitoring
+Server.<br>
+If you decide not to create a high availability hub runtime environment, a hub recycle might be required
+when you install maintenance for self-described enabled agents configured to run in the hub Tivoli
+Enterprise Monitoring Server address space.<br><br>
+            <b>Without using a self-describing agent</b>
+If your hub Tivoli Enterprise Monitoring Server is not self-describing agent enabled, you have to manually
+add application support to the hub Tivoli Enterprise Monitoring Server.<br>
+You can add application support to a z/OS Tivoli Enterprise Monitoring Server from the Tivoli Enterprise
+Portal Server.<br>
+From a Windows Tivoli Enterprise Portal Server environment, do the following steps:
+    
+    </div>
+    
+    <ol>
+  <li>From the <b>Manage Tivoli Enterprise Monitoring Services</b> window, verify that Tivoli Enterprise Portal Server is started.</li>
+  <li>From the <b>Manage Tivoli Enterprise Monitoring Services</b> window, right-click <b>Tivoli Enterprise Portal Server.</b></li>
+  <li>From the pop-up menu, click <b>Advanced > Add TEMS application support.</b></li>
+  <li>Select <b>On a different computer</b> and click <b>OK</b>. A message is displayed that specifies that the Tivoli Enterprise Monitoring Server on the remote system must be running. <br>Note that you already started the Tivoli Enterprise Monitoring Server (see <u>“Starting the hub Tivoli Enterprise Monitoring Server” on page 28</u>).</li>
+  <li>Click OK to continue. The Non-Resident TEMS Connection window is displayed.</li>
+  <li>Enter the Tivoli Enterprise Monitoring Server node ID, for example, CNM01:CMS.</li>
+  <li>Select the communication protocol (for example, IP.PIPE) that the Tivoli Enterprise Monitoring Server was configured to support in your environment.</li>
+  <li>Click OK. The Non-Resident TEMS Connection window is displayed.</li>
+  <li>Enter the host and port (for example, 1918) information. Click OK. The Select the application support to add to the TEMS window is displayed.</li>
+  <li>Select IBM Z NetView Enterprise Management Agent Support, then click OK. The application support add operation starts. This can take some time to complete.</li>
+  <li>When the operation completes, the Application Support Addition Complete window is displayed.</li>
+  <li>Check the return codes.
+    <ul>
+      <li>All operations should end with a return code of 0.</li>
+      <li>If a return code is not 0, look in the <span><</span> <span>install_dir</span><span>></span>\CNPS\Logs directory for diagnostic messages that you can use to determine the cause of the problem.</li>
+    </ul>
+  </li>
+  <li>Click Close to close the Application Support Addition Complete window.</li>
+  <li>Click OK to confirm the Tivoli Enterprise Monitoring Server restart notification.</li>
+  <li>Stop and restart the Tivoli Enterprise Monitoring Server.</li>
+</ol>
+
+    
+   <div class="margin">
+    From a UNIX or Linux Tivoli Enterprise Portal Server environment, start the Manage Tivoli Enterprise
+Monitoring Services dialog box using the following command:<br>
+       <div class="back">
+       ./itmcmd manage
+       </div>
+       Follow the steps as described for the Windows environment.
+    </div> 
+    <br><br>
+    <div class="hline"></div>
+    <div class="heading"><b>Chapter 4. Verifying the configuration</b></div><br><br><br>
+        <div class="margin">
+    The verification scenarios in this chapter assume that the Tivoli Enterprise Monitoring Server and the
+NetView program are already started. This chapter provides information about the following procedures:
+    </div>
+    <ul>
+  <li><u>Starting the NetView agent</u> on page 35</li>
+  <li><u>Starting the connection to the NetView agent</u> on page 35</li>
+  <li><u>Starting the Tivoli Enterprise Portal Server</u> on page 36</li>
+  <li><u>Starting the Tivoli Enterprise Portal</u> on page 36</li>
+  <li><u>Verifying the operation of the agent</u> on page 37</li>
+</ul><br><br>
+<div class="heading2">Starting the NetView agent</div>
+    <div class="hline2"></div>
+        <div class="margin">
+    To start the NetView agent, do the following steps:
+    <ol>
+            <li>From the z/OS system console, start the NetView agent using the following command:
+        <div class="back">
+                S IBMNA
+                </div>
+                IBMNA is the default started task procedure name.
+        </li>
+            <li>Verify that the following messages are written to the system console:
+        <div class="back">
+                <br>
+            BNH877I NETVIEW ENTERPRISE MANAGEMENT AGENT INTERFACE IS READY FOR WORK<br>
+BNH856I NETVIEW ENTERPRISE MANAGEMENT AGENT INITIALIZED <br>
+SUCCESSFULLY
+                </div>
+        </li>
+            </ol>
+    </div><br><br>
+   <div class="heading2">Starting the connection to the NetView agent</div>
+    <div class="hline2"></div>
+        <div class="margin"> 
+    Enabling the TEMA tower in the CNMSTYLE member defines the AUTONALC autotask. The initial
+command run by this autotask is the NACMD command.<br>
+The NACMD command starts a long-running process that communicates with the NetView agent. When
+this command is issued, the long-running process passes NetView information to the agent. The NACMD
+command must remain active for the data collectors to store data into the agent data space. The process
+also waits for NetView command requests from the agent. It services those requests and returns the
+command responses.<br>
+When the NetView program initializes, the NACMD command fails until the NetView agent is started. After
+you start the NetView agent, issue the following NACMD command from the NetView console:
+    <div class="back">
+            EXCMD ?NALCLOP,NACMD
+            </div>
+            The NACMD command produces the following output in the NetView log:
+            <div class="back">
+             NetView V6R3 - NM NetView CNM01 NETOP1 06/17/19 20:51:59 W
+                <table>
+                <tr>
+                    <td>C NTVEF<br><br></td>
+                    <td>BNH804I 'NETVIEW ENTERPRISE MANAGEMENT AGENT' 'CNMEMARX' INTERFACE<br>
+ INITIALIZATION IS STARTING</td>
+                 </tr>
+                <tr>
+                <td>C NTVEF</td>    
+                    <td>BNH804I 'NETVIEW ENTERPRISE MANAGEMENT AGENT' 'CNMEMARX' INTERFACE<br>
+ INITIALIZATION IS COMPLETE</td>
+                    
+                </tr>
+                
+                </table>
+            </div>
+    <em>Figure 7. NACMD output</em> <br>
+            You can automatically start a hub Tivoli Enterprise Monitoring Server that runs in a z/OS environment and
+the NetView agent when the NetView program initializes. To do this, see <u>“Starting the NetView agent at
+initialization” on page 46.</u>
+    </div>
+    <br><br>
+    <div class="heading2">Starting the Tivoli Enterprise Portal Server</div>
+    <div class="hline2"></div>
+        <div class="margin"> 
+Follow these procedures to start the Tivoli Enterprise Portal Server:
+    </div>
+    <ul>
+        <li><u>“Starting the server in a Windows environment” on page 36</u></li>
+<li><u>“Starting the server in a Linux or UNIX environment” on page 36</u></li>
+        
+    </ul>
+    <b>Starting the server in a Windows environment</b>
+    <div class="margin">
+    Follow these steps to start the server:
+    </div>
+    <ol>
+    <li> From the Manage Tivoli Enterprise Monitoring Services window, review the status column to determine
+if the Tivoli Enterprise Portal Server is started.</li>
+        <li> If the status column does not display Started, right-click <b>Tivoli Enterprise Portal Server</b> and then
+click <b>Start</b>.</li>
+    </ol>
+    <b>Starting the server in a Linux or UNIX environment</b>
+    <div class="margin">
+    Follow these steps to start the server:
+    </div>
+    <ol>
+    <li>On the server where the Tivoli Enterprise Portal Server is configured, change to the $install_dir/bin
+directory.</li>
+    <li>To display a list of running IBM Tivoli Monitoring processes, enter the following command:</li>
+    <div class="back">
+        ./cinfo -R
+        </div>
+    The information as shown in Figure <u>8 on page 36</u> is displayed:
+    
+        <div class="back">
+            *********** Sat Aug 2 16:29:14 EDT 2014 ******************<br>
+            
+            
+User : root Group: root sfcb<br>
+Host name : joker Installer Lvl:06.30.03.00<br>
+CandleHome: /opt/IBM/ITM<br>
+            
+*********************************************************<br>
+Host Prod PID Owner Start ID ..Status<br>
+joker kf 1859 root 16:19 None ..running<br>
+joker cq 1937 root 16:19 None ..running<br>
+            </div>
+        <em>Figure 8. IBM Tivoli Monitoring processes</em><br><br>
+        The product code for the Tivoli Enterprise Portal Server is cq.
+        
+        
+        
+        <li>If the Tivoli Enterprise Portal Server process is not displayed or does not show a status of running,
+enter the following command to start it:
+        <div class="back">
+            ./itmcmd agent start cq
+            </div>
+        Follow the steps as described for the Windows environment.
+        </li>
+    </ol><br><br>
+      <div class="heading2">Starting the Tivoli Enterprise Portal</div>
+    <div class="hline2"></div>
+        <div class="margin">
+            Follow these procedures to start the Tivoli Enterprise Portal:
+            <br>
+            <ul>
+            <li>“Starting the portal in a Windows environment” on page 36</li>
+            <li> “Starting the portal in a UNIX environment” on page 37</li>
+            </ul>
+            
+    </div>
+            
+    <b>Starting the portal in a Windows environment</b>        
+          <div class="margin">
+    Follow these steps to start the portal:
+    </div>  
+        <ol>
+    <li>. If the Tivoli Enterprise Portal Desktop is not started, right-click <b>Tivoli Enterprise Portal Desktop</b> or
+<b>Tivoli Enterprise Portal Browser</b>, and select <b>Start</b>.</li>
+            <li> Log on to the Tivoli Enterprise Portal desktop client. The default user ID is <b>sysadmin</b>.</li>
+    </ol>    
+    <b>Starting the portal in a UNIX environment</b>        
+       <div class="margin">
+    To start the Tivoli Enterprise Portal, log on and then enter the following command:
+    <div class="back">
+           ./itmcmd agent start cj
+           </div>
+           Not all UNIX platforms support a desktop client.
+    </div>     
+       <div class="heading2">Verifying self-describing agent enablement</div>
+    <div class="hline2"></div>
+        <div class="margin">      
+            
+          If you used the self-describing agent feature to add application support, you can use ITM installation
+verification processing to view messages that indicate successful processing for the NetView agent
+application support file.<br>
+When the agent comes online for the first time with the self-describing agent support enabled, the agent
+adds the catalog entries to the Tivoli Enterprise Monitoring Server, then it does the seeding process
+(assuming that the self-describing agent installation records are still set to the default). If the NetView
+agent is connected to a remote Tivoli Enterprise Monitoring Server, when it comes online, the hub
+application support and seeding is processed first, followed by the remote Tivoli Enterprise Monitoring
+Server.<br>
+To validate successful self-describing agent application support seeding, look for the KRAA0002 message
+in the NetView agent RKLVLOG file and the KFASD101 message in the hub Tivoli Enterprise Monitoring
+Server RKLVLOG file.  
+          </div><br><br>   
+        <div class="heading2">Verifying the operation of the agent</div>
+    <div class="hline2"></div>
+        <div class="margin">     
+            To verify that the NetView agent is successfully installed and operating, do these steps:
+            <ol>
+            <li>Verify that "NetView" is in the Navigator Physical view. "NetView" is located under the z/OS system on
+which you installed the NetView agent, as shown in <u>Figure 9 on page 37.</u>
+                <img src="img7.png">
+                </li>
+            <em>Figure 9. Navigator Physical view</em>
+            <li> Expand the entry representing the NetView domain.</li>
+            <li>Select the NetView Health leaf from the Navigator Physical view.
+                <ul>
+                <li>The NetView Applications workspace is displayed as shown in <u>Figure 10 on page 38</u>.</li>
+                <li>If you do not see the output, see the <em>IBM Z NetView Troubleshooting Guide</em>.</li>
+                </ul>
+            <b>Usage note:</b> This scenario assumes that the DISCOVERY tower is enabled.<br>
+                <img src="img8.png"><br>
+                <em>Figure 10. NetView Applications workspace</em>
+                </li>
+                <li>To exit the client, click <b>File > Exit</b> from the toolbar.</li>
+            </ol>
+            
+            
+    </div><br><br>   
+      <div class="hline"></div>
+    <div class="heading"><b>Chapter 5. Customizing your system</b></div><br><br><br>
+        <div class="margin">      
+            This chapter provides information on the following topics:
+            <ul>
+  <li><u>Implementing Security</u> on page 39</li>
+  <li><u>Defining NetView agent parameters</u> on page 42</li>
+  <li><u>Setting up the subtowers and associated functions</u> on page 43</li>
+  <li><u>Setting up data collection</u> on page 44</li>
+  <li><u>Starting the NetView agent at initialization</u> on page 46</li>
+  <li><u>Installing and configuring historical data collection and reporting</u> on page 47</li>
+</ul>
+    </div>
+        <div class="heading2">Implementing Security</div>
+    <div class="hline2"></div>
+        <div class="margin">    
+         When implementing security, decide which users require access to the Tivoli Enterprise Portal and the
+NetView program, and which applications the users should be allowed to access.<br>
+You can use the following methods to provide security for the NetView agent:   
+            <ul>
+  <li><u>Defining user IDs</u> on page 39</li>
+  <li><u>Restricting access to commands</u> on page 40</li>
+  <li><u>Enabling additional security from the server</u> on page 40</li>
+</ul>
+    </div><br><br>
+   <div class="subheading">Defining user IDs</div> <br>        
+          Each user requires a user ID to access data through the Tivoli Enterprise Portal (portal). The user ID must
+be registered on the Tivoli Enterprise Portal Server. You can log on to the portal using the default user ID
+(SYSADMIN) and register other user IDs through the Administer Users window. The SYSADMIN user ID
+has full access and complete administrator authority.<br>
+When a Take Action command is issued from the NetView agent (or forwarded to the NetView program
+from another IBM Tivoli Monitoring component), the portal user ID is sent to the NetView program
+together with the command. The NetView operator ID that will execute the command is determined by
+the portal user ID. If the portal user ID is mapped to a NetView operator ID in the CNMSTYLE member by
+a NACMD.OPID.portaluserID statement, the NetView operator specified on the statement is used. If there
+is not a NACMD.OPID statement for the portal user ID in the CNMSTYLE member, the portal user ID is
+used as the NetView operator ID. The resulting NetView operator name is then validated according to the
+NetView operator ID criteria (see the OPERATOR statement in the <em>IBM Z NetView Administration
+Reference</em>).<br>
+Command authorization for the Take Action commands uses the NetView task that was determined
+previously. By default, the following NetView operator IDs are defined:  
+       <ul>
+  <li>SYSADMIN (the default portal user ID)</li>
+  <li>NATEP1</li>
+  <li>NATEP2</li>
+</ul>
+
+<p>To create additional user IDs to use with the NetView agent, use one of the following methods:</p>
+
+<ul>
+  <li>Create a new portal user ID that matches a new or existing NetView operator ID. This is the preferred method. For information about creating new user ID, see IBM Tivoli Monitoring: Administrator's Guide.</li>
+  <li>Define the existing portal user ID to the NetView program. For information about defining the user ID to the NetView program, refer to the IBM Z NetView Security Reference.</li>
+  <li>Map the portal user ID to a valid NetView operator ID. For more information, review the NACMD.OPID.TEPLogonID statement in the CNMSTYLE member.</li>
+</ul>
+    
+    <b>Usage notes:</b>
+    
+    <ol>
+  <li>Do not map multiple portal user IDs to a single NetView operator ID because multiple portal user IDs can have the same command authorization. This might also cause throughput problems.</li>
+  <li>Do not map a portal user ID to a NetView operator ID that is used to log on to a 3270 terminal. The Take Action command might run on an active NetView operator ID with unpredictable results. Instead, map the portal user ID to a NetView autotask.</li>
+  <li>If you enable password authentication by the hub Tivoli Enterprise Monitoring Server, consider that password phrases are not supported by the Tivoli Enterprise Portal login and therefore cannot be passed to the Tivoli Enterprise Monitoring Server for RACF® verification. Because of this restriction, if you create a portal user ID that matches the NetView operator ID, only use NetView operator IDs that use passwords and not password phrases.</li>
+</ol>
+
+    
+</div>     
+   <div class="subheading">
+Restricting access to commands
+</div>         
+            <div class="margin">
+To restrict which NetView operator IDs can issue the NACMD command or the NetView Take Action
+commands, update the command authorization table in the CNMSCAT2 member or the RACF definitions
+in the CNMSAF2 member in the DSIPARM data set. For more information on updating the CNMSAF2 and
+CNMSCAT2 members, refer to <em>IBM Z NetView Security Reference</em>.
+</div>
+     <div class="subheading">Enabling additional security from the server</div>       
+            
+         <div class="margin">
+You can implement the following security features at the hub Tivoli Enterprise Monitoring Server:
+</div>   
+            <ul>
+<li> Password authentication</li>
+            <li>Data encryption</li>    
+                <li>Command authorization</li>
+</ul>
+        <div class="margin">
+ <b>Setting up password protection</b><br>
+            Use the following steps to enable password authentication by the hub Tivoli Enterprise Monitoring Server:<br>
+</div>
+            <ol>
+            <li>From the Parameter Generator (PARMGEN) Workflow panel, select option 8 to customize configuration
+profiles. This option enables you to override or specify values for the monitoring server configuration
+files.</li>
+            <li>Select option 1 to customize the RTE LPAR profile.
+</li>
+            <li>To enable security when a user logs on to the monitoring server, edit the monitoring server RTE
+section. Set the following statement to Y (Yes):
+            <div class="back">
+                KDS_TEMS_SECURITY_KDS_VALIDATE Y 
+                </div></li>
+                <li>Configure RACF or your system authorization facility (SAF) product to authenticate the sysadmin user
+ID and portal user IDs. For a complete description of defining user IDs to RACF, refer to the RACF
+library.<br>
+                Remember that password phrases are not supported by the Tivoli Enterprise Portal login and therefore
+cannot be passed to the Tivoli Enterprise Monitoring Server for RACF verification. 
+                </li>
+            </ol>
+            
+    
+     <div class="margin">
+<b>Setting up encryption
+</b><br>
+         You can use IBM Integrated Cryptographic Service Facility (ICSF) to create and manage the encryption of
+data between components through the use of digital certificates. If ICSF is not installed on your z/OS
+system, the monitoring server uses an alternative, less secure encryption scheme.<br>
+Communication between a hub monitoring server and the Tivoli Enterprise Portal Server is encrypted. On
+the Tivoli Enterprise Portal Server, the Global Security Toolkit (GSKit) is used for encryption and
+decryption. On z/OS, GSKit is known as the ICSF. Since both components must be using the same
+scheme, if the hub system does not use ICSF, you must configure the Tivoli Enterprise Portal Server to use
+the less secure scheme (EGG1) as well. For more information on setting up encryption, see <em>IBM Tivoli OMEGAMON XE and Tivoli Management Services: Configuring the Tivoli Enterprise Monitoring Server on z/OS.</em>
+</div>  
+<div class="subheading">
+Performing command authorization for Take Action commands
+</div>
+<div class="margin">
+System commands issued from the Tivoli Enterprise Portal using Take Action commands or situations run
+without command authorization or an audit trail. You can use the NetView product to perform command
+authorization for these system commands and to provide an audit trail.<br>
+Command authorization for the Take Action system commands uses the portal user ID, which is sent to
+the NetView program with the command. The portal user ID that is sent is used to determine the user ID
+that issues the command. When a command is sent from a situation, the user ID that is sent is the last
+one that edited the situation. Password validation is not performed. If a NetView operator ID exists that
+matches the portal user ID and has the required command authorization, then the command is run on the
+existing NetView operator ID. For more information about protecting MVS system commands, refer to the
+<em>IBM Z NetView Security Reference.</em><br>
+Some agents provide their own Take Action commands, known as agent commands. Agent commands
+have an associated two-character prefix for their product code. These commands are not sent to the
+NetView program for command authorization. The only agent commands that are sent to the NetView
+program for authorization are the NetView agent commands prefixed with NA:. For information about
+creating or editing a Take Action command, refer to <em>IBM Tivoli Monitoring: Tivoli Enterprise Portal User's
+Guide.</em><br>
+You can display Take Action commands and command responses in the NetView Command Response
+workspace. Additionally, you can display the BNH806I and BNH807I audit trail messages in the NetView
+Audit Log workspace.<br>
+Use the following steps to enable command authorization checking for system commands:
+
+</div>
+ 
+    
+     
+
+
+
+
+
+
+
+
+
+  
+            
+            
+    
+    </body>
+</html>
